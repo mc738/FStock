@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="Library.fs" />
+        <Compile Include="Data\Persistence.fs" />
+        <Compile Include="Data\Import.fs" />
+        <Compile Include="Visualizations\Charts.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Freql\Freql.Csv\Freql.Csv.fsproj" />
+      <ProjectReference Include="..\..\Freql\Freql.Sqlite\Freql.Sqlite.fsproj" />
+      <ProjectReference Include="..\..\FSVG\FSVG\FSVG.fsproj" />
+    </ItemGroup>
+
+</Project>
