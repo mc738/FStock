@@ -12,6 +12,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Freql.Csv", "..\Freql\Freql
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSVG", "..\FSVG\FSVG\FSVG.fsproj", "{F9B12CB0-CE60-4526-A32D-2D8F350620FB}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FStock.Simulator", "FStock.Simulator\FStock.Simulator.fsproj", "{5D52C647-BE48-411C-BBBC-67269B149BFB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +40,10 @@ Global
 		{F9B12CB0-CE60-4526-A32D-2D8F350620FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9B12CB0-CE60-4526-A32D-2D8F350620FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F9B12CB0-CE60-4526-A32D-2D8F350620FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D52C647-BE48-411C-BBBC-67269B149BFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D52C647-BE48-411C-BBBC-67269B149BFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D52C647-BE48-411C-BBBC-67269B149BFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D52C647-BE48-411C-BBBC-67269B149BFB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F0016549-D2BC-4BE6-A93C-FA9AA8C1016B} = {94FEA581-475B-4C47-AAA2-F6F58CF0934E}

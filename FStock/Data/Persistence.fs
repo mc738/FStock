@@ -5,9 +5,35 @@ open System.Text.Json.Serialization
 open Freql.Core.Common
 open Freql.Sqlite
 
-/// Module generated on 15/08/2022 20:53:26 (utc) via Freql.Sqlite.Tools.
+/// Module generated on 29/08/2022 10:47:58 (utc) via Freql.Sqlite.Tools.
 [<RequireQualifiedAccess>]
 module Records =
+    /// A record representing a row in the table `day_reports`.
+    type DayReport =
+        { [<JsonPropertyName("entryDate")>] EntryDate: DateTime
+          [<JsonPropertyName("reportBlob")>] ReportBlob: BlobField }
+    
+        static member Blank() =
+            { EntryDate = DateTime.UtcNow
+              ReportBlob = BlobField.Empty() }
+    
+        static member CreateTableSql() = """
+        CREATE TABLE day_reports (
+	entry_date TEXT NOT NULL,
+	report_blob BLOB NOT NULL,
+	CONSTRAINT day_reports_PK PRIMARY KEY (entry_date)
+)
+        """
+    
+        static member SelectSql() = """
+        SELECT
+              entry_date,
+              report_blob
+        FROM day_reports
+        """
+    
+        static member TableName() = "day_reports"
+    
     /// A record representing a row in the table `etfs`.
     type Etf =
         { [<JsonPropertyName("symbol")>] Symbol: string
@@ -117,6 +143,41 @@ module Records =
         """
     
         static member TableName() = "import_errors"
+    
+    /// A record representing a row in the table `moving_averages`.
+    type MovingAverage =
+        { [<JsonPropertyName("symbol")>] Symbol: string
+          [<JsonPropertyName("entryDate")>] EntryDate: DateTime
+          [<JsonPropertyName("movingAverage50Days")>] MovingAverage50Days: decimal
+          [<JsonPropertyName("movingAverage200Days")>] MovingAverage200Days: decimal }
+    
+        static member Blank() =
+            { Symbol = String.Empty
+              EntryDate = DateTime.UtcNow
+              MovingAverage50Days = 0m
+              MovingAverage200Days = 0m }
+    
+        static member CreateTableSql() = """
+        CREATE TABLE moving_averages (
+	symbol TEXT NOT NULL,
+	entry_date TEXT NOT NULL,
+	moving_average50_days REAL NOT NULL,
+	moving_average200_days REAL NOT NULL,
+	CONSTRAINT moving_averages_PK PRIMARY KEY (symbol,entry_date),
+	CONSTRAINT moving_averages_FK FOREIGN KEY (symbol) REFERENCES symbol_metadata(symbol)
+)
+        """
+    
+        static member SelectSql() = """
+        SELECT
+              symbol,
+              entry_date,
+              moving_average50_days,
+              moving_average200_days
+        FROM moving_averages
+        """
+    
+        static member TableName() = "moving_averages"
     
     /// A record representing a row in the table `stocks`.
     type Stock =
@@ -235,9 +296,19 @@ module Records =
         static member TableName() = "symbol_metadata"
     
 
-/// Module generated on 15/08/2022 20:53:26 (utc) via Freql.Tools.
+/// Module generated on 29/08/2022 10:47:58 (utc) via Freql.Tools.
 [<RequireQualifiedAccess>]
 module Parameters =
+    /// A record representing a new row in the table `day_reports`.
+    type NewDayReport =
+        { [<JsonPropertyName("entryDate")>] EntryDate: DateTime
+          [<JsonPropertyName("reportBlob")>] ReportBlob: BlobField }
+    
+        static member Blank() =
+            { EntryDate = DateTime.UtcNow
+              ReportBlob = BlobField.Empty() }
+    
+    
     /// A record representing a new row in the table `etfs`.
     type NewEtf =
         { [<JsonPropertyName("symbol")>] Symbol: string
@@ -282,6 +353,20 @@ module Parameters =
             { Symbol = String.Empty
               Line = 0
               Message = String.Empty }
+    
+    
+    /// A record representing a new row in the table `moving_averages`.
+    type NewMovingAverage =
+        { [<JsonPropertyName("symbol")>] Symbol: string
+          [<JsonPropertyName("entryDate")>] EntryDate: DateTime
+          [<JsonPropertyName("movingAverage50Days")>] MovingAverage50Days: decimal
+          [<JsonPropertyName("movingAverage200Days")>] MovingAverage200Days: decimal }
+    
+        static member Blank() =
+            { Symbol = String.Empty
+              EntryDate = DateTime.UtcNow
+              MovingAverage50Days = 0m
+              MovingAverage200Days = 0m }
     
     
     /// A record representing a new row in the table `stocks`.
@@ -336,12 +421,36 @@ module Parameters =
               NextShares = true }
     
     
-/// Module generated on 15/08/2022 20:53:26 (utc) via Freql.Tools.
+/// Module generated on 29/08/2022 10:47:58 (utc) via Freql.Tools.
 [<RequireQualifiedAccess>]
 module Operations =
 
     let buildSql (lines: string list) = lines |> String.concat Environment.NewLine
 
+    /// Select a `Records.DayReport` from the table `day_reports`.
+    /// Internally this calls `context.SelectSingleAnon<Records.DayReport>` and uses Records.DayReport.SelectSql().
+    /// The caller can provide extra string lines to create a query and boxed parameters.
+    /// It is up to the caller to verify the sql and parameters are correct,
+    /// this should be considered an internal function (not exposed in public APIs).
+    /// Parameters are assigned names based on their order in 0 indexed array. For example: @0,@1,@2...
+    /// Example: selectDayReportRecord ctx "WHERE `field` = @0" [ box `value` ]
+    let selectDayReportRecord (context: SqliteContext) (query: string list) (parameters: obj list) =
+        let sql = [ Records.DayReport.SelectSql() ] @ query |> buildSql
+        context.SelectSingleAnon<Records.DayReport>(sql, parameters)
+    
+    /// Internally this calls `context.SelectAnon<Records.DayReport>` and uses Records.DayReport.SelectSql().
+    /// The caller can provide extra string lines to create a query and boxed parameters.
+    /// It is up to the caller to verify the sql and parameters are correct,
+    /// this should be considered an internal function (not exposed in public APIs).
+    /// Parameters are assigned names based on their order in 0 indexed array. For example: @0,@1,@2...
+    /// Example: selectDayReportRecords ctx "WHERE `field` = @0" [ box `value` ]
+    let selectDayReportRecords (context: SqliteContext) (query: string list) (parameters: obj list) =
+        let sql = [ Records.DayReport.SelectSql() ] @ query |> buildSql
+        context.SelectAnon<Records.DayReport>(sql, parameters)
+    
+    let insertDayReport (context: SqliteContext) (parameters: Parameters.NewDayReport) =
+        context.Insert("day_reports", parameters)
+    
     /// Select a `Records.Etf` from the table `etfs`.
     /// Internally this calls `context.SelectSingleAnon<Records.Etf>` and uses Records.Etf.SelectSql().
     /// The caller can provide extra string lines to create a query and boxed parameters.
@@ -413,6 +522,30 @@ module Operations =
     
     let insertImportError (context: SqliteContext) (parameters: Parameters.NewImportError) =
         context.Insert("import_errors", parameters)
+    
+    /// Select a `Records.MovingAverage` from the table `moving_averages`.
+    /// Internally this calls `context.SelectSingleAnon<Records.MovingAverage>` and uses Records.MovingAverage.SelectSql().
+    /// The caller can provide extra string lines to create a query and boxed parameters.
+    /// It is up to the caller to verify the sql and parameters are correct,
+    /// this should be considered an internal function (not exposed in public APIs).
+    /// Parameters are assigned names based on their order in 0 indexed array. For example: @0,@1,@2...
+    /// Example: selectMovingAverageRecord ctx "WHERE `field` = @0" [ box `value` ]
+    let selectMovingAverageRecord (context: SqliteContext) (query: string list) (parameters: obj list) =
+        let sql = [ Records.MovingAverage.SelectSql() ] @ query |> buildSql
+        context.SelectSingleAnon<Records.MovingAverage>(sql, parameters)
+    
+    /// Internally this calls `context.SelectAnon<Records.MovingAverage>` and uses Records.MovingAverage.SelectSql().
+    /// The caller can provide extra string lines to create a query and boxed parameters.
+    /// It is up to the caller to verify the sql and parameters are correct,
+    /// this should be considered an internal function (not exposed in public APIs).
+    /// Parameters are assigned names based on their order in 0 indexed array. For example: @0,@1,@2...
+    /// Example: selectMovingAverageRecords ctx "WHERE `field` = @0" [ box `value` ]
+    let selectMovingAverageRecords (context: SqliteContext) (query: string list) (parameters: obj list) =
+        let sql = [ Records.MovingAverage.SelectSql() ] @ query |> buildSql
+        context.SelectAnon<Records.MovingAverage>(sql, parameters)
+    
+    let insertMovingAverage (context: SqliteContext) (parameters: Parameters.NewMovingAverage) =
+        context.Insert("moving_averages", parameters)
     
     /// Select a `Records.Stock` from the table `stocks`.
     /// Internally this calls `context.SelectSingleAnon<Records.Stock>` and uses Records.Stock.SelectSql().
