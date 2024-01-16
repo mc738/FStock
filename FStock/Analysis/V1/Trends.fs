@@ -1,4 +1,4 @@
-﻿namespace FStock.Analysis
+﻿namespace FStock.Analysis.V1
 
 open System
 open System.Text.Json.Serialization

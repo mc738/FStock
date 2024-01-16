@@ -1,4 +1,4 @@
-﻿namespace FStock.Analysis
+﻿namespace FStock.Analysis.V1
 
 module MovingAverages =
     
