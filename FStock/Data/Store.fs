@@ -58,10 +58,8 @@ module Store =
     let previousXDays (ctx: SqliteContext) (days: int) (date: DateTime) (symbol: string) =
         Operations.selectStockRecords
             ctx
-            [ "WHERE symbol = @0 AND DATE(entry_date) >= DATE(@1) AND DATE(entry_date) < DATE(@2)" ]
-            [ symbol
-              date.AddDays(float (days * -1))
-              date ]
+            [ "WHERE symbol = @0 AND DATE(entry_date) >= DATE(@1) AND DATE(entry_date) < DATE(@1)" ]
+            [ symbol; date.AddDays(float (days * -1)); date ]
 
     let getStockForDate (ctx: SqliteContext) (date: DateTime) (symbol: string) =
         Operations.selectStockRecord ctx [ "WHERE symbol = @0 AND DATE(entry_date) == DATE(@1)" ] [ symbol; date ]
@@ -69,6 +67,70 @@ module Store =
     let getMetadata (ctx: SqliteContext) (symbol: string) =
         Operations.selectSymbolMetadataItemRecord ctx [ "WHERE symbol = @0" ] [ symbol ]
 
+    let previousXStockEntries (ctx: SqliteContext) (x: int) (date: DateTime) (symbol: string) =
+        Operations.selectStockRecords
+            ctx
+            [ "WHERE symbol = @0 AND DATE(entry_date) < DATE(@1)"
+              "ORDER BY entry_date DESC"
+              "LIMIT @2" ]
+            [ symbol; date; x ]
+            
+    let previousXStockEntriesInclusive (ctx: SqliteContext) (x: int) (date: DateTime) (symbol: string) =
+        Operations.selectStockRecords
+            ctx
+            [ "WHERE symbol = @0 AND DATE(entry_date) <= DATE(@1)"
+              "ORDER BY entry_date DESC"
+              "LIMIT @2" ]
+            [ symbol; date; x ]
+
+    let nextXStockEntries (ctx: SqliteContext) (x: int) (date: DateTime) (symbol: string) =
+        Operations.selectStockRecords
+            ctx
+            [ "WHERE symbol = @0 AND DATE(entry_date) > DATE(@1)"
+              "ORDER BY entry_date"
+              "LIMIT @2" ]
+            [ symbol; date; x ]
+            
+    let calculateMoveAverageX (ctx: SqliteContext) =
+        let sql = """
+        SELECT
+	        symbol,
+	        entry_date,
+	        AVG(open_value),
+	        AVG(high_value),
+	        AVG(low_value),
+	        AVG(close_value),
+	        AVG(adjusted_close_value),
+	        AVG(volume_value),
+	        COUNT(symbol)
+        FROM
+	        (
+	        SELECT
+		        symbol,
+		        entry_date,
+		        open_value,
+		        high_value,
+		        low_value,
+		        close_value,
+		        adjusted_close_value,
+		        volume_value,
+		        symbol
+	        FROM
+		        stocks
+	        WHERE
+		        symbol = @0
+		        AND DATE(entry_date) < DATE(@1)
+	        ORDER BY
+		        entry_date
+	        LIMIT @2)
+        """
+        
+        
+        
+        ()
+        
+        
+    
 
     let generateDayReport (ctx: SqliteContext) (date: DateTime) =
         Operations.selectSymbolMetadataItemRecords ctx [] []
@@ -76,36 +138,34 @@ module Store =
         |> List.choose (fun md ->
             match getStockForDate ctx date md.Symbol with
             | Some s ->
-                let prev200 =
-                    previousXDays ctx 200 date s.Symbol
+                let prev200 = previousXDays ctx 200 date s.Symbol
 
-                let prev50 =
-                    previousXDays ctx 50 date s.Symbol
-                    
+                let prev50 = previousXDays ctx 50 date s.Symbol
+
                 let prev50Avg = prev50 |> List.averageBy (fun s -> s.CloseValue)
-                
+
                 let prev200Avg = prev200 |> List.averageBy (fun s -> s.CloseValue)
-                    
+
                 let prev200High = prev200 |> List.maxBy (fun s -> s.CloseValue)
-                
+
                 let prev200Low = prev200 |> List.minBy (fun s -> s.CloseValue)
-                
+
                 let prev50High = prev50 |> List.maxBy (fun s -> s.CloseValue)
-                
+
                 let prev50Low = prev50 |> List.minBy (fun s -> s.CloseValue)
 
                 let prev50Var =
                     prev50
-                    |> List.map (fun s -> Math.Pow(float(s.CloseValue - prev50Avg), 2))
+                    |> List.map (fun s -> Math.Pow(float (s.CloseValue - prev50Avg), 2))
                     |> List.sumBy (fun s -> s)
                     |> fun r -> r / (float prev50.Length)
-                    
+
                 let prev200Var =
                     prev200
-                    |> List.map (fun s -> Math.Pow(float(s.CloseValue - prev200Avg), 2))
+                    |> List.map (fun s -> Math.Pow(float (s.CloseValue - prev200Avg), 2))
                     |> List.sumBy (fun s -> s)
                     |> fun r -> r / (float prev200.Length)
-                
+
                 ({ Symbol = s.Symbol
                    Name = md.SecurityName
                    MovingAverage50Days = prev50Avg
@@ -123,7 +183,8 @@ module Store =
                    Previous200DayVariance = prev200Var
                    Previous200DayStandardDeviation = Math.Sqrt prev200Var
                    Stock = s
-                   PreviousDay = prev200 |> List.rev |> List.head }: DayReportItem)
+                   PreviousDay = prev200 |> List.rev |> List.head }
+                : DayReportItem)
                 |> Some
             | None -> None)
         |> fun r -> ({ Date = date; Items = r |> Seq.ofList }: DayReport)
@@ -143,14 +204,11 @@ module Store =
             printfn "Caching report."
 
             use ms =
-                new MemoryStream(
-                    report
-                    |> JsonSerializer.Serialize
-                    |> Encoding.UTF8.GetBytes
-                )
+                new MemoryStream(report |> JsonSerializer.Serialize |> Encoding.UTF8.GetBytes)
 
             ({ EntryDate = date
-               ReportBlob = BlobField.FromStream ms }: Parameters.NewDayReport)
+               ReportBlob = BlobField.FromStream ms }
+            : Parameters.NewDayReport)
             |> Operations.insertDayReport ctx
 
             report)
