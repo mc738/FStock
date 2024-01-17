@@ -20,7 +20,16 @@ module Common =
           Close: decimal
           AdjustedClose: decimal }
 
-    type Con
+    type SimulationSettings = { ValueMode: ValueMode }
+
+    and [<RequireQualifiedAccess>] ValueMode =
+        | Open
+        | Close
+        | High
+        | Low
+        | AdjustedClose
+
+
 
     type PositionCondition =
         | PercentageGrowth of Percent: decimal
@@ -35,22 +44,27 @@ module Common =
         | Any of PositionCondition list
         | Not of PositionCondition
 
-        member pc.Test(start: PositionStart, current: CurrentPosition, settings) =
+        member pc.Test(start: PositionStart, current: CurrentPosition, settings: SimulationSettings) =
+            let currentValue =
+                match settings.ValueMode with
+                | ValueMode.Open -> current.Open
+                | ValueMode.Close -> current.Close
+                | ValueMode.High -> current.High
+                | ValueMode.Low -> current.Low
+                | ValueMode.AdjustedClose -> current.AdjustedClose
+
             let rec handle (condition: PositionCondition) =
                 match condition with
-                | PercentageGrowth percent ->
-                    
-                    
-                    failwith "todo"
-                | FixedValue value -> failwith "todo"
-                | PercentageLoss percent -> failwith "todo"
-                | FixedLoss value -> failwith "todo"
-                | Duration length -> failwith "todo"
-                | Bespoke handler -> failwith "todo"
-                | And(positionCondition, condition) -> failwith "todo"
-                | Or(positionCondition, condition) -> failwith "todo"
-                | All positionConditions -> failwith "todo"
-                | Any positionConditions -> failwith "todo"
-                | Not positionCondition -> failwith "todo"
-                
+                | PercentageGrowth percent -> ((currentValue - start.BuyPrice) / (start.BuyPrice) * 100m) >= percent
+                | FixedValue value -> currentValue >= value
+                | PercentageLoss percent -> (((start.BuyPrice - currentValue) / start.BuyPrice) * 100m) >= percent
+                | FixedLoss value -> currentValue <= value
+                | Duration length -> (current.Date - start.Start).Days >= length
+                | Bespoke handler -> handler start current
+                | And(a, b) -> handle a && handle b
+                | Or(a, b) -> handle a || handle b
+                | All positionConditions -> positionConditions |> List.exists (fun c -> handle c |> not) |> not
+                | Any positionConditions -> positionConditions |> List.exists handle
+                | Not positionCondition -> handle positionCondition |> not
+
             handle pc
