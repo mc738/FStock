@@ -5,7 +5,7 @@ open System.Text.Json.Serialization
 open Freql.Core.Common
 open Freql.Sqlite
 
-/// Module generated on 16/01/2024 23:08:18 (utc) via Freql.Tools.
+/// Module generated on 17/01/2024 00:11:26 (utc) via Freql.Tools.
 [<RequireQualifiedAccess>]
 module Records =
     /// A record representing a row in the table `day_values`.
@@ -111,42 +111,42 @@ module Records =
 	close_value REAL NOT NULL,
 	adj_close_value REAL NOT NULL,
 	volume_value REAL NOT NULL,
-	ma_prev_7_open_value REAL NOT NULL,
-	ma_prev_7_high_value REAL NOT NULL,
-	ma_prev_7_low_value REAL NOT NULL,
-	ma_prev_7_close_value REAL NOT NULL,
-	ma_prev_7_adj_close_value REAL NOT NULL,
-	ma_prev_7_volume_value REAL NOT NULL,
-	ma_prev_20_open_value REAL NOT NULL,
-	ma_prev_20_high_value REAL NOT NULL,
-	ma_prev_20_low_value REAL NOT NULL,
-	ma_prev_20_close_value REAL NOT NULL,
-	ma_prev_20_adj_close_value REAL NOT NULL,
-	ma_prev_20_volume_value REAL NOT NULL,
-	ma_prev_50_open_value REAL NOT NULL,
-	ma_prev_50_high_value REAL NOT NULL,
-	ma_prev_50_low_value REAL NOT NULL,
-	ma_prev_50_close_value REAL NOT NULL,
-	ma_prev_50_adj_close_value REAL NOT NULL,
-	ma_prev_50_volume_value REAL NOT NULL,
-	ma_prev_100_open_value REAL NOT NULL,
-	ma_prev_100_high_value REAL NOT NULL,
-	ma_prev_100_low_value REAL NOT NULL,
-	ma_prev_100_close_value REAL NOT NULL,
-	ma_prev_100_adj_close_value REAL NOT NULL,
-	ma_prev_100_volume_value REAL NOT NULL,
-	ma_prev_200_open_value REAL NOT NULL,
-	ma_prev_200_high_value REAL NOT NULL,
-	ma_prev_200_low_value REAL NOT NULL,
-	ma_prev_200_close_value REAL NOT NULL,
-	ma_prev_200_adj_close_value REAL NOT NULL,
-	ma_prev_200_volume_value REAL NOT NULL,
-	ma_prev_252_open_value REAL NOT NULL,
-	ma_prev_252_high_value REAL NOT NULL,
-	ma_prev_252_low_value REAL NOT NULL,
-	ma_prev_252_close_value REAL NOT NULL,
-	ma_prev_252_adj_close_value REAL NOT NULL,
-	ma_prev_252_volume_value REAL NOT NULL,
+	ma_prev7_open_value REAL NOT NULL,
+	ma_prev7_high_value REAL NOT NULL,
+	ma_prev7_low_value REAL NOT NULL,
+	ma_prev7_close_value REAL NOT NULL,
+	ma_prev7_adj_close_value REAL NOT NULL,
+	ma_prev7_volume_value REAL NOT NULL,
+	ma_prev20_open_value REAL NOT NULL,
+	ma_prev20_high_value REAL NOT NULL,
+	ma_prev20_low_value REAL NOT NULL,
+	ma_prev20_close_value REAL NOT NULL,
+	ma_prev20_adj_close_value REAL NOT NULL,
+	ma_prev20_volume_value REAL NOT NULL,
+	ma_prev50_open_value REAL NOT NULL,
+	ma_prev50_high_value REAL NOT NULL,
+	ma_prev50_low_value REAL NOT NULL,
+	ma_prev50_close_value REAL NOT NULL,
+	ma_prev50_adj_close_value REAL NOT NULL,
+	ma_prev50_volume_value REAL NOT NULL,
+	ma_prev100_open_value REAL NOT NULL,
+	ma_prev100_high_value REAL NOT NULL,
+	ma_prev100_low_value REAL NOT NULL,
+	ma_prev100_close_value REAL NOT NULL,
+	ma_prev100_adj_close_value REAL NOT NULL,
+	ma_prev100_volume_value REAL NOT NULL,
+	ma_prev200_open_value REAL NOT NULL,
+	ma_prev200_high_value REAL NOT NULL,
+	ma_prev200_low_value REAL NOT NULL,
+	ma_prev200_close_value REAL NOT NULL,
+	ma_prev200_adj_close_value REAL NOT NULL,
+	ma_prev200_volume_value REAL NOT NULL,
+	ma_prev252_open_value REAL NOT NULL,
+	ma_prev252_high_value REAL NOT NULL,
+	ma_prev252_low_value REAL NOT NULL,
+	ma_prev252_close_value REAL NOT NULL,
+	ma_prev252_adj_close_value REAL NOT NULL,
+	ma_prev252_volume_value REAL NOT NULL,
 	CONSTRAINT day_values_PK PRIMARY KEY (symbol,entry_date)
 )
         """
@@ -161,42 +161,42 @@ module Records =
               day_values.`close_value`,
               day_values.`adj_close_value`,
               day_values.`volume_value`,
-              day_values.`ma_prev_7_open_value`,
-              day_values.`ma_prev_7_high_value`,
-              day_values.`ma_prev_7_low_value`,
-              day_values.`ma_prev_7_close_value`,
-              day_values.`ma_prev_7_adj_close_value`,
-              day_values.`ma_prev_7_volume_value`,
-              day_values.`ma_prev_20_open_value`,
-              day_values.`ma_prev_20_high_value`,
-              day_values.`ma_prev_20_low_value`,
-              day_values.`ma_prev_20_close_value`,
-              day_values.`ma_prev_20_adj_close_value`,
-              day_values.`ma_prev_20_volume_value`,
-              day_values.`ma_prev_50_open_value`,
-              day_values.`ma_prev_50_high_value`,
-              day_values.`ma_prev_50_low_value`,
-              day_values.`ma_prev_50_close_value`,
-              day_values.`ma_prev_50_adj_close_value`,
-              day_values.`ma_prev_50_volume_value`,
-              day_values.`ma_prev_100_open_value`,
-              day_values.`ma_prev_100_high_value`,
-              day_values.`ma_prev_100_low_value`,
-              day_values.`ma_prev_100_close_value`,
-              day_values.`ma_prev_100_adj_close_value`,
-              day_values.`ma_prev_100_volume_value`,
-              day_values.`ma_prev_200_open_value`,
-              day_values.`ma_prev_200_high_value`,
-              day_values.`ma_prev_200_low_value`,
-              day_values.`ma_prev_200_close_value`,
-              day_values.`ma_prev_200_adj_close_value`,
-              day_values.`ma_prev_200_volume_value`,
-              day_values.`ma_prev_252_open_value`,
-              day_values.`ma_prev_252_high_value`,
-              day_values.`ma_prev_252_low_value`,
-              day_values.`ma_prev_252_close_value`,
-              day_values.`ma_prev_252_adj_close_value`,
-              day_values.`ma_prev_252_volume_value`
+              day_values.`ma_prev7_open_value`,
+              day_values.`ma_prev7_high_value`,
+              day_values.`ma_prev7_low_value`,
+              day_values.`ma_prev7_close_value`,
+              day_values.`ma_prev7_adj_close_value`,
+              day_values.`ma_prev7_volume_value`,
+              day_values.`ma_prev20_open_value`,
+              day_values.`ma_prev20_high_value`,
+              day_values.`ma_prev20_low_value`,
+              day_values.`ma_prev20_close_value`,
+              day_values.`ma_prev20_adj_close_value`,
+              day_values.`ma_prev20_volume_value`,
+              day_values.`ma_prev50_open_value`,
+              day_values.`ma_prev50_high_value`,
+              day_values.`ma_prev50_low_value`,
+              day_values.`ma_prev50_close_value`,
+              day_values.`ma_prev50_adj_close_value`,
+              day_values.`ma_prev50_volume_value`,
+              day_values.`ma_prev100_open_value`,
+              day_values.`ma_prev100_high_value`,
+              day_values.`ma_prev100_low_value`,
+              day_values.`ma_prev100_close_value`,
+              day_values.`ma_prev100_adj_close_value`,
+              day_values.`ma_prev100_volume_value`,
+              day_values.`ma_prev200_open_value`,
+              day_values.`ma_prev200_high_value`,
+              day_values.`ma_prev200_low_value`,
+              day_values.`ma_prev200_close_value`,
+              day_values.`ma_prev200_adj_close_value`,
+              day_values.`ma_prev200_volume_value`,
+              day_values.`ma_prev252_open_value`,
+              day_values.`ma_prev252_high_value`,
+              day_values.`ma_prev252_low_value`,
+              day_values.`ma_prev252_close_value`,
+              day_values.`ma_prev252_adj_close_value`,
+              day_values.`ma_prev252_volume_value`
         FROM day_values
         """
     
@@ -255,7 +255,7 @@ module Records =
         static member TableName() = "stocks"
     
 
-/// Module generated on 16/01/2024 23:08:18 (utc) via Freql.Tools.
+/// Module generated on 17/01/2024 00:11:26 (utc) via Freql.Tools.
 [<RequireQualifiedAccess>]
 module Parameters =
     /// A record representing a new row in the table `day_values`.
@@ -372,7 +372,7 @@ module Parameters =
               Name = String.Empty }
     
     
-/// Module generated on 16/01/2024 23:08:18 (utc) via Freql.Tools.
+/// Module generated on 17/01/2024 00:11:26 (utc) via Freql.Tools.
 [<RequireQualifiedAccess>]
 module Operations =
 
