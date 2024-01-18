@@ -156,16 +156,16 @@ module Common =
 
             handle pc
 
+    [<RequireQualifiedAccess>]
     type PositionAction =
         | IncreasePositionByFixedAmount of Amount: decimal
         | IncreasePositionByPercentage of Percent: decimal
         | DecreasePositionByFixedAmount of Amount: decimal
         | DecreasePositionByPercentage of Percent: decimal
-        | ChangeBehaviour of NewBehaviour: string
 
     type PositionBehaviour =
         { Condition: PositionCondition
-          Action: PositionAction }
+          Actions: PositionAction list }
 
     type TradingModel =
         { Behaviours: Map<string, PositionBehaviour>
@@ -173,12 +173,60 @@ module Common =
           DefaultBehaviour: PositionCondition }
 
     type BehaviourMap =
-        {
-            BehaviourId: string
-            PositionId: string
-        }
-    
+        { BehaviourId: string
+          PositionId: string
+          Priority: int }
+
+    type PrioritizedActions =
+        { Actions: PositionAction list
+          Priority: int }
+
     type SimulationContext =
         { Portfolio: Portfolio
           Model: TradingModel
+          CurrentPositionHandler: OpenPosition -> CurrentPosition
+          Settings: SimulationSettings
           BehaviourMaps: BehaviourMap list }
+
+        member ctx.Handle() =
+            // First find all open positions and behaviours and related behaviours.
+
+            ctx.Portfolio.OpenPositions
+            |> List.map (fun op ->
+                op,
+                ctx.BehaviourMaps
+                |> List.filter (fun bm -> bm.PositionId = op.Id)
+                |> List.sortBy (fun bm -> bm.Priority) // This will prioritize behaviours.
+                |> List.choose (fun bm ->
+                    ctx.Model.Behaviours.TryFind bm.BehaviourId
+                    |> Option.map (fun b -> b, bm.Priority)))
+            |> List.map (fun (op, bs) ->
+                // Get the current position.
+                let cp = ctx.CurrentPositionHandler op
+
+                // Now prioritize behaviours.
+
+                let action =
+                    // Then run through them until one is triggered.
+                    bs
+                    |> List.sortBy snd
+                    |> List.fold
+                        (fun (pa: PrioritizedActions list) (b, p) ->
+                            match b.Condition.Test(op, cp, ctx.Settings) with
+                            | true -> pa @ [ { Actions = b.Actions; Priority = p } ]
+                            | false -> pa)
+                        []
+
+                let combineActions (actions: PrioritizedActions list) =
+                    // Combine actions so they are simplified.
+                    // For example if there is action to buy 10 and sell 5 then this will be combined to buy 5.
+                    
+                    // Simple mode -> first actions hit
+                    match actions.IsEmpty |> not with
+                    | true -> actions.Head.Actions
+                    | false -> []
+
+                // Handle the action.
+                match action with
+                | Some a -> ()
+                | None -> ())
