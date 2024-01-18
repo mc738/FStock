@@ -161,6 +161,7 @@ module Common =
         | IncreasePositionByPercentage of Percent: decimal
         | DecreasePositionByFixedAmount of Amount: decimal
         | DecreasePositionByPercentage of Percent: decimal
+        | ChangeBehaviour of NewBehaviour: string
 
     type PositionBehaviour =
         { Condition: PositionCondition
@@ -171,6 +172,13 @@ module Common =
           GeneralBehaviours: PositionBehaviour list
           DefaultBehaviour: PositionCondition }
 
+    type BehaviourMap =
+        {
+            BehaviourId: string
+            PositionId: string
+        }
+    
     type SimulationContext =
         { Portfolio: Portfolio
-          Model: TradingModel }
+          Model: TradingModel
+          BehaviourMaps: BehaviourMap list }
