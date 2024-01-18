@@ -198,14 +198,17 @@ module Simulation =
 
             let positionStart =
                 ({ Id = System.Guid.NewGuid().ToString()
-                   ParentId = None 
+                   ParentId = None
                    Symbol = s.Symbol
                    Start = start
                    BuyPrice = s.OpenValue
                    Volume = 1m }
                 : OpenPosition)
 
-            let settings = ({ ValueMode = ValueMode.Close }: SimulationSettings)
+            let settings =
+                ({ ValueMode = ValueMode.Close
+                   ActionCombinationMode = ActionCombinationMode.Simple }
+                : SimulationSettings)
 
             let conditions =
                 PositionCondition.Any [ PositionCondition.PercentageGrowth 50m; PositionCondition.PercentageLoss 50m ]
