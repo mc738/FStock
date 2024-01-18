@@ -13,7 +13,7 @@ module Common =
           BuyPrice: decimal
           Volume: decimal }
 
-    type ClosedPosition =
+    and ClosedPosition =
         { Id: string
           ParentId: string option
           Symbol: string
@@ -23,7 +23,7 @@ module Common =
           SellPrice: decimal
           Volume: decimal }
 
-    type CurrentPosition =
+    and CurrentPosition =
         { Symbol: string
           Date: DateTime
           Open: decimal
@@ -32,7 +32,7 @@ module Common =
           Close: decimal
           AdjustedClose: decimal }
 
-    type Portfolio =
+    and Portfolio =
         { OpenPositions: OpenPosition list
           ClosedPositions: ClosedPosition list }
 
@@ -108,16 +108,7 @@ module Common =
         member p.GetClosedPositionsForSymbol(symbol) =
             p.ClosedPositions |> List.filter (fun cp -> cp.Symbol = symbol)
 
-    type SimulationSettings = { ValueMode: ValueMode }
-
-    and [<RequireQualifiedAccess>] ValueMode =
-        | Open
-        | Close
-        | High
-        | Low
-        | AdjustedClose
-
-    type PositionCondition =
+    and PositionCondition =
         | PercentageGrowth of Percent: decimal
         | FixedValue of Value: decimal
         | PercentageLoss of Percent: decimal
@@ -156,31 +147,52 @@ module Common =
 
             handle pc
 
-    [<RequireQualifiedAccess>]
-    type PositionAction =
+
+    and [<RequireQualifiedAccess>] PositionAction =
         | IncreasePositionByFixedAmount of Amount: decimal
         | IncreasePositionByPercentage of Percent: decimal
         | DecreasePositionByFixedAmount of Amount: decimal
         | DecreasePositionByPercentage of Percent: decimal
 
-    type PositionBehaviour =
+    and PositionBehaviour =
         { Condition: PositionCondition
           Actions: PositionAction list }
 
-    type TradingModel =
+    and TradingModel =
         { Behaviours: Map<string, PositionBehaviour>
           GeneralBehaviours: PositionBehaviour list
           DefaultBehaviour: PositionCondition }
 
-    type BehaviourMap =
+    and BehaviourMap =
         { BehaviourId: string
           PositionId: string
           Priority: int }
 
-    type PrioritizedActions =
+    and PrioritizedActions =
         { Actions: PositionAction list
           Priority: int }
 
+    and SimulationSettings =
+        { ValueMode: ValueMode
+          ActionCombinationMode: ActionCombinationMode }
+
+    and [<RequireQualifiedAccess>] ValueMode =
+        | Open
+        | Close
+        | High
+        | Low
+        | AdjustedClose
+
+    and [<RequireQualifiedAccess>] ActionCombinationMode =
+        | Simple
+        | Bespoke of Handler: (PrioritizedActions list -> PositionAction list)
+
+    and TriggeredActions =
+        {
+            Position: OpenPosition
+            Actions: PositionAction list
+        }
+    
     type SimulationContext =
         { Portfolio: Portfolio
           Model: TradingModel
@@ -206,27 +218,24 @@ module Common =
 
                 // Now prioritize behaviours.
 
-                let action =
-                    // Then run through them until one is triggered.
-                    bs
-                    |> List.sortBy snd
-                    |> List.fold
-                        (fun (pa: PrioritizedActions list) (b, p) ->
-                            match b.Condition.Test(op, cp, ctx.Settings) with
-                            | true -> pa @ [ { Actions = b.Actions; Priority = p } ]
-                            | false -> pa)
-                        []
-
-                let combineActions (actions: PrioritizedActions list) =
+                // Then run through them until one is triggered.
+                bs
+                |> List.sortBy snd
+                |> List.fold
+                    (fun (pa: PrioritizedActions list) (b, p) ->
+                        match b.Condition.Test(op, cp, ctx.Settings) with
+                        | true -> pa @ [ { Actions = b.Actions; Priority = p } ]
+                        | false -> pa)
+                    []
+                |> fun pas ->
                     // Combine actions so they are simplified.
                     // For example if there is action to buy 10 and sell 5 then this will be combined to buy 5.
-                    
-                    // Simple mode -> first actions hit
-                    match actions.IsEmpty |> not with
-                    | true -> actions.Head.Actions
-                    | false -> []
-
-                // Handle the action.
-                match action with
-                | Some a -> ()
-                | None -> ())
+                    match ctx.Settings.ActionCombinationMode with
+                    | ActionCombinationMode.Simple ->
+                        // Simple mode -> first actions hit
+                        match pas.IsEmpty |> not with
+                        | true -> pas.Head.Actions
+                        | false -> []
+                    | ActionCombinationMode.Bespoke fn -> fn pas
+                |> fun ta -> { Position = op; Actions = ta })
+            // Update portfolio/behaviours based on the actions.
