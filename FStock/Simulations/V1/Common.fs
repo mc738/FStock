@@ -194,6 +194,31 @@ module Common =
 
     and LogItem = { Message: string }
 
+    and UpdateState =
+        { Portfolio: Portfolio
+          BehaviourMaps: BehaviourMap list
+          Logs: string list }
+
+        static member Create(portfolio, behaviourMaps) =
+            { Portfolio = portfolio
+              BehaviourMaps = behaviourMaps
+              Logs = [] }
+
+        member us.Buy(symbol, date, price, volume) =
+            { us with
+                Portfolio = us.Portfolio.Buy(symbol, date, price, volume)
+                Logs = us.Logs @ [ "" ] }
+
+        member us.Sell(symbol, date, price, volume) =
+
+            match us.Portfolio.TrySell(symbol, date, price, volume) with
+            | Ok np ->
+                { us with
+                    Portfolio = np
+                    Logs = us.Logs @ [ "" ] }
+            | Error e -> { us with Logs = us.Logs @ [ "" ] }
+
+
     type SimulationContext =
         { Portfolio: Portfolio
           Model: TradingModel
@@ -210,8 +235,8 @@ module Common =
                 | ValueMode.Close -> cp.Close
                 | ValueMode.High -> cp.High
                 | ValueMode.Low -> cp.Low
-                | ValueMode.AdjustedClose -> failwith "todo"
-            
+                | ValueMode.AdjustedClose -> cp.AdjustedClose
+
             ctx.Portfolio.OpenPositions
             |> List.map (fun op ->
                 op,
@@ -251,21 +276,27 @@ module Common =
                       Actions = ta
                       CurrentPosition = cp })
             |> List.fold
-                (fun (state: Portfolio, acc) (ta) ->
+                (fun (state: UpdateState) (ta) ->
                     ta.Actions
                     |> List.fold
-                        (fun (p: Portfolio, innerAcc) a ->
+                        (fun (us: UpdateState) a ->
                             match a with
                             | PositionAction.IncreasePositionByFixedAmount amount ->
-                                
-                                
-                                p.Buy(ta.Position.Symbol, date, "", amount), [ "" ]
+                                us.Buy(ta.Position.Symbol, date, getValue ta.CurrentPosition, amount)
                             | PositionAction.IncreasePositionByPercentage percent ->
-                                
-                                
-                                failwith "todo"
-                            | PositionAction.DecreasePositionByFixedAmount amount -> failwith "todo"
-                            | PositionAction.DecreasePositionByPercentage percent -> failwith "todo")
-                        (state, acc))
-                (ctx.Portfolio, [])
+                                let volumeIncrease = (ta.Position.Volume / 100m) * percent
+
+                                us.Buy(ta.Position.Symbol, date, getValue ta.CurrentPosition, volumeIncrease)
+                            | PositionAction.DecreasePositionByFixedAmount amount ->
+                                // TODO pass on action mappings to new position.
+                                us.Sell(ta.Position.Id, date, getValue ta.CurrentPosition, amount)
+                            | PositionAction.DecreasePositionByPercentage percent ->
+                                let volumeDecrease = (ta.Position.Volume / 100m) * percent
+                                us.Sell(ta.Position.Id, date, getValue ta.CurrentPosition, volumeDecrease))
+                        state)
+                (UpdateState.Create(ctx.Portfolio, ctx.BehaviourMaps))
+            |> fun ns ->
+                { ctx with
+                    Portfolio = ns.Portfolio
+                    BehaviourMaps = ns.BehaviourMaps }
 // Update portfolio/behaviours based on the actions.
