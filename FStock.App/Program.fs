@@ -197,11 +197,13 @@ module Simulation =
             // For now choose open value.
 
             let positionStart =
-                ({ Symbol = s.Symbol
+                ({ Id = System.Guid.NewGuid().ToString()
+                   ParentId = None 
+                   Symbol = s.Symbol
                    Start = start
                    BuyPrice = s.OpenValue
                    Volume = 1m }
-                : PositionStart)
+                : OpenPosition)
 
             let settings = ({ ValueMode = ValueMode.Close }: SimulationSettings)
 
