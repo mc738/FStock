@@ -11,11 +11,22 @@
         <Compile Include="Data\Import.fs" />
         <Compile Include="Data\Store.fs" />
         <Compile Include="Visualizations\Charts.fs" />
+        <Compile Include="Analysis\V1\Persistence.fs" />
+        <Compile Include="Analysis\V1\Common.fs" />
+        <Compile Include="Analysis\V1\MovingAverages.fs" />
+        <Compile Include="Analysis\V1\Stability.fs" />
+        <Compile Include="Analysis\V1\Trends.fs" />
+        <Compile Include="Analysis\V1\History.fs" />
+        <Compile Include="Analysis\V1\Rules.fs" />
+        <Compile Include="Analysis\V1\Impl.fs" />
+        <Compile Include="Simulations\V1\Common.fs" />
+        <Compile Include="Simulations\V1\Testing.fs" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\Freql\Freql.Csv\Freql.Csv.fsproj" />
       <ProjectReference Include="..\..\Freql\Freql.Sqlite\Freql.Sqlite.fsproj" />
+      <ProjectReference Include="..\..\FSVG\FSVG.Charts\FSVG.Charts.fsproj" />
       <ProjectReference Include="..\..\FSVG\FSVG\FSVG.fsproj" />
     </ItemGroup>
 
