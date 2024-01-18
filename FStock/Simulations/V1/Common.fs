@@ -188,21 +188,30 @@ module Common =
         | Bespoke of Handler: (PrioritizedActions list -> PositionAction list)
 
     and TriggeredActions =
-        {
-            Position: OpenPosition
-            Actions: PositionAction list
-        }
-    
+        { Position: OpenPosition
+          Actions: PositionAction list
+          CurrentPosition: CurrentPosition }
+
+    and LogItem = { Message: string }
+
     type SimulationContext =
         { Portfolio: Portfolio
           Model: TradingModel
-          CurrentPositionHandler: OpenPosition -> CurrentPosition
+          CurrentPositionHandler: OpenPosition -> DateTime -> CurrentPosition
           Settings: SimulationSettings
           BehaviourMaps: BehaviourMap list }
 
-        member ctx.Handle() =
+        member ctx.Handle(date: DateTime) =
             // First find all open positions and behaviours and related behaviours.
 
+            let getValue (cp: CurrentPosition) =
+                match ctx.Settings.ValueMode with
+                | ValueMode.Open -> cp.Open
+                | ValueMode.Close -> cp.Close
+                | ValueMode.High -> cp.High
+                | ValueMode.Low -> cp.Low
+                | ValueMode.AdjustedClose -> failwith "todo"
+            
             ctx.Portfolio.OpenPositions
             |> List.map (fun op ->
                 op,
@@ -214,7 +223,7 @@ module Common =
                     |> Option.map (fun b -> b, bm.Priority)))
             |> List.map (fun (op, bs) ->
                 // Get the current position.
-                let cp = ctx.CurrentPositionHandler op
+                let cp = ctx.CurrentPositionHandler op date
 
                 // Now prioritize behaviours.
 
@@ -237,5 +246,26 @@ module Common =
                         | true -> pas.Head.Actions
                         | false -> []
                     | ActionCombinationMode.Bespoke fn -> fn pas
-                |> fun ta -> { Position = op; Actions = ta })
-            // Update portfolio/behaviours based on the actions.
+                |> fun ta ->
+                    { Position = op
+                      Actions = ta
+                      CurrentPosition = cp })
+            |> List.fold
+                (fun (state: Portfolio, acc) (ta) ->
+                    ta.Actions
+                    |> List.fold
+                        (fun (p: Portfolio, innerAcc) a ->
+                            match a with
+                            | PositionAction.IncreasePositionByFixedAmount amount ->
+                                
+                                
+                                p.Buy(ta.Position.Symbol, date, "", amount), [ "" ]
+                            | PositionAction.IncreasePositionByPercentage percent ->
+                                
+                                
+                                failwith "todo"
+                            | PositionAction.DecreasePositionByFixedAmount amount -> failwith "todo"
+                            | PositionAction.DecreasePositionByPercentage percent -> failwith "todo")
+                        (state, acc))
+                (ctx.Portfolio, [])
+// Update portfolio/behaviours based on the actions.
