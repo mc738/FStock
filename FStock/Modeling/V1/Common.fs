@@ -22,15 +22,6 @@ module Common =
           BuyPrice: decimal
           SellPrice: decimal
           Volume: decimal }
-        
-        member cp.GetValue(mode: ValueMode) =
-            match mode with
-            | ValueMode.Open -> failwith "todo"
-            | ValueMode.Close -> failwith "todo"
-            | ValueMode.High -> failwith "todo"
-            | ValueMode.Low -> failwith "todo"
-            | ValueMode.AdjustedClose -> failwith "todo"
-                        
 
     and CurrentPosition =
         { Symbol: string
@@ -40,6 +31,41 @@ module Common =
           Low: decimal
           Close: decimal
           AdjustedClose: decimal }
+
+        member cp.GetValue(mode: ValueMode) =
+            match mode with
+            | ValueMode.Open -> cp.Open
+            | ValueMode.Close -> cp.Close
+            | ValueMode.High -> cp.High
+            | ValueMode.Low -> cp.Low
+            | ValueMode.AdjustedClose -> cp.AdjustedClose
+
+    and HistoricPosition =
+        { Symbol: string
+          Date: DateTime
+          Open: decimal
+          High: decimal
+          Low: decimal
+          Close: decimal
+          AdjustedClose: decimal }
+
+    and HistoricPositionFilter =
+        { From: DateTime option
+          FromInclusive: bool
+          To: DateTime option
+          ToInclusive: bool
+          SymbolFilter: SymbolFilter }
+
+    and HistoricPositionHandler = HistoricPositionFilter -> HistoricPosition list
+    
+    and [<RequireQualifiedAccess>] SymbolFilter =
+        | All
+        | Stocks
+        | Etfs
+        | In of Symbols: string list
+        | NotIn of Symbols: string list
+        | EqualTo of Symbol: string
+        | NotEqualTo of Symbol: string
 
     and Portfolio =
         { OpenPositions: OpenPosition list
@@ -118,44 +144,44 @@ module Common =
             p.ClosedPositions |> List.filter (fun cp -> cp.Symbol = symbol)
 
     and PositionCondition =
-        | PercentageGrowth of Percent: decimal
-        | FixedValue of Value: decimal
-        | PercentageLoss of Percent: decimal
-        | FixedLoss of Value: decimal
+        | PercentageGrowth of Percent: decimal * ValueMapper: ConditionValueMapper
+        | FixedValue of Value: decimal * ValueMapper: ConditionValueMapper
+        | PercentageLoss of Percent: decimal * ValueMapper: ConditionValueMapper
+        | FixedLoss of Value: decimal * ValueMapper: ConditionValueMapper
         | Duration of Length: int
-        | Bespoke of Handler: (OpenPosition -> CurrentPosition -> bool)
+        | Bespoke of Handler: (OpenPosition -> CurrentPosition -> HistoricPositionHandler -> bool)
         | And of PositionCondition * PositionCondition
         | Or of PositionCondition * PositionCondition
         | All of PositionCondition list
         | Any of PositionCondition list
         | Not of PositionCondition
 
-        member pc.Test(position: OpenPosition, current: CurrentPosition, valueMode: ValueMode) =
-            let currentValue =
-                match valueMode with
-                | ValueMode.Open -> current.Open
-                | ValueMode.Close -> current.Close
-                | ValueMode.High -> current.High
-                | ValueMode.Low -> current.Low
-                | ValueMode.AdjustedClose -> current.AdjustedClose
+    and ConditionValueMapper =
+        | Value of Mode: ValueMode
+        | FixedAdjustment of Mode: ValueMode * Adjustment: decimal
+        | PercentageIncrease of Mode: ValueMode * Percentage: decimal
+        | PercentageDecrease of Mode: ValueMode * Percentage: decimal
 
-            let rec handle (condition: PositionCondition) =
-                match condition with
-                | PercentageGrowth percent ->
-                    ((currentValue - position.BuyPrice) / (position.BuyPrice) * 100m) >= percent
-                | FixedValue value -> currentValue >= value
-                | PercentageLoss percent -> (((position.BuyPrice - currentValue) / position.BuyPrice) * 100m) >= percent
-                | FixedLoss value -> currentValue <= value
-                | Duration length -> (current.Date - position.Start).Days >= length
-                | Bespoke handler -> handler position current
-                | And(a, b) -> handle a && handle b
-                | Or(a, b) -> handle a || handle b
-                | All positionConditions -> positionConditions |> List.exists (fun c -> handle c |> not) |> not
-                | Any positionConditions -> positionConditions |> List.exists handle
-                | Not positionCondition -> handle positionCondition |> not
+        member cvm.GetValue(position: CurrentPosition) =
+            let getBaseValue (mode: ValueMode) =
+                match mode with
+                | ValueMode.Open -> position.Open
+                | ValueMode.Close -> position.Close
+                | ValueMode.High -> position.High
+                | ValueMode.Low -> position.Low
+                | ValueMode.AdjustedClose -> position.AdjustedClose
 
-            handle pc
+            match cvm with
+            | Value mode -> getBaseValue mode
+            | FixedAdjustment(mode, adjustment) -> getBaseValue mode + adjustment
+            | PercentageIncrease(mode, percentage) ->
+                let bv = getBaseValue mode
 
+                bv + ((bv / 100m) * percentage)
+            | PercentageDecrease(mode, percentage) ->
+                let bv = getBaseValue mode
+
+                bv - ((bv / 100m) * percentage)
 
     and [<RequireQualifiedAccess>] PositionAction =
         | IncreasePositionByFixedAmount of Amount: decimal
@@ -205,111 +231,26 @@ module Common =
           Actions: PositionAction list
           CurrentPosition: CurrentPosition }
 
-    and LogItem = { Message: string }
+    module Conditions =
 
-    and UpdateState =
-        { Portfolio: Portfolio
-          BehaviourMaps: BehaviourMap list
-          Logs: string list }
+        /// <summary>
+        /// A behaviour to check the current position's low value vs a fixed lose.
+        /// This is to simulate if a stop-loss has been hit.
+        /// </summary>
+        /// <param name="stopLoss"></param>
+        let ``fixed stop-loss`` stopLoss =
+            PositionCondition.FixedLoss(stopLoss, ConditionValueMapper.Value ValueMode.Low)
 
-        static member Create(portfolio, behaviourMaps) =
-            { Portfolio = portfolio
-              BehaviourMaps = behaviourMaps
-              Logs = [] }
+        /// <summary>
+        /// A behaviour to check the current position's low value vs a percentage lose.
+        /// This is to simulate if a stop-loss has been hit.
+        /// </summary>
+        /// <param name="stopLossPercent"></param>
+        let ``percentage stop-loss`` stopLossPercent =
+            PositionCondition.PercentageLoss(stopLossPercent, ConditionValueMapper.Value ValueMode.Low)
 
-        member us.Buy(symbol, date, price, volume) =
-            { us with
-                Portfolio = us.Portfolio.Buy(symbol, date, price, volume)
-                Logs = us.Logs @ [ "" ] }
+        let ``fixed take profit`` takeProfit =
+            PositionCondition.FixedValue(takeProfit, ConditionValueMapper.Value ValueMode.High)
 
-        member us.Sell(symbol, date, price, volume) =
-
-            match us.Portfolio.TrySell(symbol, date, price, volume) with
-            | Ok np ->
-                { us with
-                    Portfolio = np
-                    Logs = us.Logs @ [ "" ] }
-            | Error e -> { us with Logs = us.Logs @ [ "" ] }
-
-
-    type SimulationContext =
-        { Portfolio: Portfolio
-          Model: TradingModel
-          CurrentPositionHandler: OpenPosition -> DateTime -> CurrentPosition
-          Settings: SimulationSettings
-          BehaviourMaps: BehaviourMap list }
-
-        member ctx.Handle(date: DateTime) =
-            // First find all open positions and behaviours and related behaviours.
-
-            let getValue (cp: CurrentPosition) =
-                match ctx.Settings.ValueMode with
-                | ValueMode.Open -> cp.Open
-                | ValueMode.Close -> cp.Close
-                | ValueMode.High -> cp.High
-                | ValueMode.Low -> cp.Low
-                | ValueMode.AdjustedClose -> cp.AdjustedClose
-
-            ctx.Portfolio.OpenPositions
-            |> List.map (fun op ->
-                op,
-                ctx.BehaviourMaps
-                |> List.filter (fun bm -> bm.PositionId = op.Id)
-                |> List.sortBy (fun bm -> bm.Priority) // This will prioritize behaviours.
-                |> List.choose (fun bm ->
-                    ctx.Model.Behaviours.TryFind bm.BehaviourId
-                    |> Option.map (fun b -> b, bm.Priority)))
-            |> List.map (fun (op, bs) ->
-                // Get the current position.
-                let cp = ctx.CurrentPositionHandler op date
-
-                // Now prioritize behaviours.
-
-                // Then run through them until one is triggered.
-                bs
-                |> List.sortBy snd
-                |> List.fold
-                    (fun (pa: PrioritizedActions list) (b, p) ->
-                        match b.Condition.Test(op, cp, ctx.Settings) with
-                        | true -> pa @ [ { Actions = b.Actions; Priority = p } ]
-                        | false -> pa)
-                    []
-                |> fun pas ->
-                    // Combine actions so they are simplified.
-                    // For example if there is action to buy 10 and sell 5 then this will be combined to buy 5.
-                    match ctx.Settings.ActionCombinationMode with
-                    | ActionCombinationMode.Simple ->
-                        // Simple mode -> first actions hit
-                        match pas.IsEmpty |> not with
-                        | true -> pas.Head.Actions
-                        | false -> []
-                    | ActionCombinationMode.Bespoke fn -> fn pas
-                |> fun ta ->
-                    { Position = op
-                      Actions = ta
-                      CurrentPosition = cp })
-            |> List.fold
-                (fun (state: UpdateState) (ta) ->
-                    ta.Actions
-                    |> List.fold
-                        (fun (us: UpdateState) a ->
-                            match a with
-                            | PositionAction.IncreasePositionByFixedAmount amount ->
-                                us.Buy(ta.Position.Symbol, date, getValue ta.CurrentPosition, amount)
-                            | PositionAction.IncreasePositionByPercentage percent ->
-                                let volumeIncrease = (ta.Position.Volume / 100m) * percent
-
-                                us.Buy(ta.Position.Symbol, date, getValue ta.CurrentPosition, volumeIncrease)
-                            | PositionAction.DecreasePositionByFixedAmount amount ->
-                                // TODO pass on action mappings to new position.
-                                us.Sell(ta.Position.Id, date, getValue ta.CurrentPosition, amount)
-                            | PositionAction.DecreasePositionByPercentage percent ->
-                                let volumeDecrease = (ta.Position.Volume / 100m) * percent
-                                us.Sell(ta.Position.Id, date, getValue ta.CurrentPosition, volumeDecrease))
-                        state)
-                (UpdateState.Create(ctx.Portfolio, ctx.BehaviourMaps))
-            |> fun ns ->
-                { ctx with
-                    Portfolio = ns.Portfolio
-                    BehaviourMaps = ns.BehaviourMaps }
-// Update portfolio/behaviours based on the actions.
+        let ``percentage take profit`` takeProfitPercent (actions: PositionAction list) =
+            PositionCondition.PercentageGrowth(takeProfitPercent, ConditionValueMapper.Value ValueMode.High)
