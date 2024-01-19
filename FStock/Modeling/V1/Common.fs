@@ -1,4 +1,4 @@
-﻿namespace FStock.Modelling.V1
+﻿namespace FStock.Modeling.V1
 
 open System
 
@@ -22,6 +22,15 @@ module Common =
           BuyPrice: decimal
           SellPrice: decimal
           Volume: decimal }
+        
+        member cp.GetValue(mode: ValueMode) =
+            match mode with
+            | ValueMode.Open -> failwith "todo"
+            | ValueMode.Close -> failwith "todo"
+            | ValueMode.High -> failwith "todo"
+            | ValueMode.Low -> failwith "todo"
+            | ValueMode.AdjustedClose -> failwith "todo"
+                        
 
     and CurrentPosition =
         { Symbol: string
@@ -121,9 +130,9 @@ module Common =
         | Any of PositionCondition list
         | Not of PositionCondition
 
-        member pc.Test(position: OpenPosition, current: CurrentPosition, settings: SimulationSettings) =
+        member pc.Test(position: OpenPosition, current: CurrentPosition, valueMode: ValueMode) =
             let currentValue =
-                match settings.ValueMode with
+                match valueMode with
                 | ValueMode.Open -> current.Open
                 | ValueMode.Close -> current.Close
                 | ValueMode.High -> current.High
@@ -166,6 +175,10 @@ module Common =
     and BehaviourMap =
         { BehaviourId: string
           PositionId: string
+          Priority: int }
+
+    and PrioritizedBehaviour =
+        { Behaviour: PositionBehaviour
           Priority: int }
 
     and PrioritizedActions =
