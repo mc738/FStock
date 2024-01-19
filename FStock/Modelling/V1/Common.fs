@@ -1,4 +1,4 @@
-﻿namespace FStock.Simulations.V1
+﻿namespace FStock.Modelling.V1
 
 open System
 
