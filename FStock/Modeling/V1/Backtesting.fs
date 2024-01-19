@@ -37,8 +37,22 @@ module Backtesting =
 
     type NewStateRewriter = UpdateState -> UpdateState
 
+    type TestingSettings =
+        {
+            BuyValueMode: ValueMode
+            /// <summary>
+            /// The ValueModel to be used when checking conditions.
+            /// This is separate to help model situations where a stop-lose might be hit within a period.
+            /// By setting this to ValueMode.Low you can ensure conditions are being checked against the low value
+            /// for that period.  
+            /// </summary>
+            ConditionTestValueMode: ValueMode
+            SellValueMode: ValueMode
+            ActionCombinationMode: ActionCombinationMode
+        }
+    
     type TestingContext =
-        { Settings: SimulationSettings
+        { Settings: TestingSettings
           CurrentPositionHandler: OpenPosition -> DateTime -> CurrentPosition
           NewStateRewriters: NewStateRewriter list }
 
@@ -68,7 +82,7 @@ module Backtesting =
         |> List.sortBy (fun pb -> pb.Priority)
         |> List.fold
             (fun (pa: PrioritizedActions list) pb ->
-                match pb.Behaviour.Condition.Test(position, cp, ctx.Settings) with
+                match pb.Behaviour.Condition.Test(position, cp, ctx.Settings.ConditionTestValueMode) with
                 | true ->
                     pa
                     @ [ { Actions = pb.Behaviour.Actions
