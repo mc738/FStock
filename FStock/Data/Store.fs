@@ -67,6 +67,12 @@ module Store =
     let getMetadata (ctx: SqliteContext) (symbol: string) =
         Operations.selectSymbolMetadataItemRecord ctx [ "WHERE symbol = @0" ] [ symbol ]
 
+    let getAllMetadata (ctx: SqliteContext) =
+        Operations.selectSymbolMetadataItemRecords ctx [] []
+
+    let getAllStockMetadata (ctx: SqliteContext) =
+        Operations.selectSymbolMetadataItemRecords ctx [ "WHERE is_eft = 0" ] []
+
     let previousXStockEntries (ctx: SqliteContext) (x: int) (date: DateTime) (symbol: string) =
         Operations.selectStockRecords
             ctx
@@ -74,7 +80,7 @@ module Store =
               "ORDER BY entry_date DESC"
               "LIMIT @2" ]
             [ symbol; date; x ]
-            
+
     let previousXStockEntriesInclusive (ctx: SqliteContext) (x: int) (date: DateTime) (symbol: string) =
         Operations.selectStockRecords
             ctx
@@ -90,9 +96,10 @@ module Store =
               "ORDER BY entry_date"
               "LIMIT @2" ]
             [ symbol; date; x ]
-            
+
     let calculateMoveAverageX (ctx: SqliteContext) =
-        let sql = """
+        let sql =
+            """
         SELECT
 	        symbol,
 	        entry_date,
@@ -124,13 +131,10 @@ module Store =
 		        entry_date
 	        LIMIT @2)
         """
-        
-        
-        
+
+
+
         ()
-        
-        
-    
 
     let generateDayReport (ctx: SqliteContext) (date: DateTime) =
         Operations.selectSymbolMetadataItemRecords ctx [] []
@@ -189,7 +193,6 @@ module Store =
             | None -> None)
         |> fun r -> ({ Date = date; Items = r |> Seq.ofList }: DayReport)
 
-
     let getDay (ctx: SqliteContext) (date: DateTime) =
         Operations.selectDayReportRecord ctx [ "WHERE DATE(entry_date) = DATE(@0)" ] [ date ]
         |> Option.map (fun dr ->
@@ -212,3 +215,8 @@ module Store =
             |> Operations.insertDayReport ctx
 
             report)
+
+
+    type FStockStore(ctx: SqliteContext) =
+
+        member _.GetStockForDate(symbol: string, date: DateTime) = getStockForDate ctx date symbol
