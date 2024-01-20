@@ -57,7 +57,7 @@ module Common =
           SymbolFilter: SymbolFilter }
 
     and HistoricPositionHandler = HistoricPositionFilter -> HistoricPosition list
-    
+
     and [<RequireQualifiedAccess>] SymbolFilter =
         | All
         | Stocks
@@ -68,22 +68,57 @@ module Common =
         | NotEqualTo of Symbol: string
 
     and Portfolio =
-        { Liquidity: decimal
-          OpenPositions: OpenPosition list
-          ClosedPositions: ClosedPosition list }
+        {
+            /// <summary>
+            /// The initial amount invested in the portfolio.
+            /// This will only increase but will not found money reinvested.
+            /// </summary>
+            InitialInvestment: decimal
+            Liquidity: decimal
+            OpenPositions: OpenPosition list
+            ClosedPositions: ClosedPosition list
+        }
 
-        member p.Add
-        
-        member p.Buy(symbol, date, price, volume) =
+        member p.AddInitialInvestment(value: decimal) =
             { p with
-                OpenPositions =
-                    p.OpenPositions
-                    @ [ { Id = System.Guid.NewGuid().ToString("n")
-                          ParentId = None
-                          Symbol = symbol
-                          Start = date
-                          BuyPrice = price
-                          Volume = volume } ] }
+                InitialInvestment = p.InitialInvestment + value
+                Liquidity = p.Liquidity + value }
+
+        member p.TryBuy(symbol, date, price, volume, ?fromLiquidity) =
+            let totalCost = price * volume
+
+            match fromLiquidity |> Option.defaultValue true with
+            | true ->
+                match p.Liquidity >= (totalCost) with
+                | true ->
+                    let newId = System.Guid.NewGuid().ToString("n")
+
+                    { p with
+                        Liquidity = p.Liquidity - totalCost
+                        OpenPositions =
+                            p.OpenPositions
+                            @ [ { Id = newId
+                                  ParentId = None
+                                  Symbol = symbol
+                                  Start = date
+                                  BuyPrice = price
+                                  Volume = volume } ] }
+                    |> fun np -> BuyResult.Success(np, newId)
+                | false -> BuyResult.Failure "Not enough liquidity"
+            | false ->
+                let newId = System.Guid.NewGuid().ToString("n")
+
+                { p with
+                    InitialInvestment = p.InitialInvestment + totalCost
+                    OpenPositions =
+                        p.OpenPositions
+                        @ [ { Id = newId
+                              ParentId = None
+                              Symbol = symbol
+                              Start = date
+                              BuyPrice = price
+                              Volume = volume } ] }
+                |> fun np -> BuyResult.Success(np, newId)
 
         member p.GetOpenPositionsForSymbol(symbol) =
             p.OpenPositions |> List.filter (fun op -> op.Symbol = symbol)
@@ -97,9 +132,12 @@ module Common =
                 // If
                 match volume < op.Volume with
                 | true ->
+                    
+                    let newId = System.Guid.NewGuid().ToString()
+                    
                     // If volume is less then total volume create an open and closed position.
                     let nop =
-                        ({ Id = System.Guid.NewGuid().ToString()
+                        ({ Id = newId
                            ParentId = Some op.Id
                            Symbol = op.Symbol
                            Start = op.Start
@@ -119,9 +157,10 @@ module Common =
                         : ClosedPosition)
 
                     ({ p with
+                        Liquidity = p.Liquidity + (volume * price)
                         OpenPositions = oop @ [ nop ]
                         ClosedPositions = p.ClosedPositions @ [ ncp ] })
-                    |> Ok
+                    |> fun np -> SellResult.Success(np, Some newId)
                 | false ->
                     // Just need a new close position
                     // NOTE if volume is more than is held this will handle it correctly.
@@ -140,8 +179,8 @@ module Common =
                     ({ p with
                         OpenPositions = oop
                         ClosedPositions = p.ClosedPositions @ [ ncp ] })
-                    |> Ok
-            | None -> Error "Position not found"
+                    |> fun np -> SellResult.Success(np, None)
+            | None -> SellResult.Failure "Position not found"
 
         member p.GetClosedPositionsForSymbol(symbol) =
             p.ClosedPositions |> List.filter (fun cp -> cp.Symbol = symbol)
@@ -149,11 +188,11 @@ module Common =
     and [<RequireQualifiedAccess>] BuyResult =
         | Success of NewPortfolio: Portfolio * NewId: string
         | Failure of Message: string
-        
+
     and [<RequireQualifiedAccess>] SellResult =
-        | Success  of NewPortfolio: Portfolio * NewId: string
+        | Success of NewPortfolio: Portfolio * NewId: string option
         | Failure of Message: string
-    
+
     and PositionCondition =
         | PercentageGrowth of Percent: decimal * ValueMapper: ConditionValueMapper
         | FixedValue of Value: decimal * ValueMapper: ConditionValueMapper
