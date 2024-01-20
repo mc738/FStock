@@ -68,9 +68,12 @@ module Common =
         | NotEqualTo of Symbol: string
 
     and Portfolio =
-        { OpenPositions: OpenPosition list
+        { Liquidity: decimal
+          OpenPositions: OpenPosition list
           ClosedPositions: ClosedPosition list }
 
+        member p.Add
+        
         member p.Buy(symbol, date, price, volume) =
             { p with
                 OpenPositions =
@@ -143,6 +146,14 @@ module Common =
         member p.GetClosedPositionsForSymbol(symbol) =
             p.ClosedPositions |> List.filter (fun cp -> cp.Symbol = symbol)
 
+    and [<RequireQualifiedAccess>] BuyResult =
+        | Success of NewPortfolio: Portfolio * NewId: string
+        | Failure of Message: string
+        
+    and [<RequireQualifiedAccess>] SellResult =
+        | Success  of NewPortfolio: Portfolio * NewId: string
+        | Failure of Message: string
+    
     and PositionCondition =
         | PercentageGrowth of Percent: decimal * ValueMapper: ConditionValueMapper
         | FixedValue of Value: decimal * ValueMapper: ConditionValueMapper
