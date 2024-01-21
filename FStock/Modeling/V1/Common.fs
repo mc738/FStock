@@ -47,7 +47,8 @@ module Common =
           High: decimal
           Low: decimal
           Close: decimal
-          AdjustedClose: decimal }
+          AdjustedClose: decimal
+          Volume: decimal }
 
     and HistoricPositionFilter =
         { From: DateTime option
@@ -84,11 +85,11 @@ module Common =
                 InitialInvestment = p.InitialInvestment + value
                 Liquidity = p.Liquidity + value }
 
-        member p.TryBuy(symbol, date, price, volume, ?fromLiquidity) =
+        member p.TryBuy(symbol, date, price, volume, ?investmentType) =
             let totalCost = price * volume
 
-            match fromLiquidity |> Option.defaultValue true with
-            | true ->
+            match investmentType |> Option.defaultValue InvestmentType.PrioritizeLiquidity with
+            | LiquidityOnly ->
                 match p.Liquidity >= (totalCost) with
                 | true ->
                     let newId = System.Guid.NewGuid().ToString("n")
@@ -105,7 +106,11 @@ module Common =
                                   Volume = volume } ] }
                     |> fun np -> BuyResult.Success(np, newId)
                 | false -> BuyResult.Failure "Not enough liquidity"
-            | false ->
+            | PrioritizeLiquidity ->
+                // How much can be done with liquidity? Any left over amount is new investment.
+                ()
+            | PrioritizeNewInvestment // Essentially the same as NewInvestmentOnly in this case.
+            | NewInvestmentOnly ->
                 let newId = System.Guid.NewGuid().ToString("n")
 
                 { p with
@@ -119,6 +124,11 @@ module Common =
                               BuyPrice = price
                               Volume = volume } ] }
                 |> fun np -> BuyResult.Success(np, newId)
+            | LiquidityLimitAsMaximum ->
+                // Update to the amount of liquidity.
+                
+                failwith "todo"
+            
 
         member p.GetOpenPositionsForSymbol(symbol) =
             p.OpenPositions |> List.filter (fun op -> op.Symbol = symbol)
@@ -132,9 +142,9 @@ module Common =
                 // If
                 match volume < op.Volume with
                 | true ->
-                    
+
                     let newId = System.Guid.NewGuid().ToString()
-                    
+
                     // If volume is less then total volume create an open and closed position.
                     let nop =
                         ({ Id = newId
@@ -199,12 +209,18 @@ module Common =
         | PercentageLoss of Percent: decimal * ValueMapper: ConditionValueMapper
         | FixedLoss of Value: decimal * ValueMapper: ConditionValueMapper
         | Duration of Length: int
-        | Bespoke of Handler: (OpenPosition -> CurrentPosition -> HistoricPositionHandler -> bool)
+        | Bespoke of Handler: (OpenPosition -> CurrentPosition -> HistoricPositionHandler -> Portfolio -> bool)
         | And of PositionCondition * PositionCondition
         | Or of PositionCondition * PositionCondition
         | All of PositionCondition list
         | Any of PositionCondition list
         | Not of PositionCondition
+
+    and BespokeConditionParameters =
+        { Position: OpenPosition
+          Current: CurrentPosition
+          Portfolio: Portfolio
+          HistoricPositionHandler: HistoricPositionHandler }
 
     and ConditionValueMapper =
         | Value of Mode: ValueMode
@@ -234,10 +250,17 @@ module Common =
                 bv - ((bv / 100m) * percentage)
 
     and [<RequireQualifiedAccess>] PositionAction =
-        | IncreasePositionByFixedAmount of Amount: decimal
-        | IncreasePositionByPercentage of Percent: decimal
+        | IncreasePositionByFixedAmount of Amount: decimal * InvestmentType: InvestmentType
+        | IncreasePositionByPercentage of Percent: decimal * InvestmentType: InvestmentType
         | DecreasePositionByFixedAmount of Amount: decimal
         | DecreasePositionByPercentage of Percent: decimal
+
+    and InvestmentType =
+        | PrioritizeLiquidity
+        | PrioritizeNewInvestment
+        | LiquidityOnly
+        | NewInvestmentOnly
+        | LiquidityLimitAsMaximum
 
     and PositionBehaviour =
         { Condition: PositionCondition
@@ -302,5 +325,5 @@ module Common =
         let ``fixed take profit`` takeProfit =
             PositionCondition.FixedValue(takeProfit, ConditionValueMapper.Value ValueMode.High)
 
-        let ``percentage take profit`` takeProfitPercent (actions: PositionAction list) =
+        let ``percentage take profit`` takeProfitPercent =
             PositionCondition.PercentageGrowth(takeProfitPercent, ConditionValueMapper.Value ValueMode.High)
