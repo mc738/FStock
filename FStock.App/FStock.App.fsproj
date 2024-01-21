@@ -7,6 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Tools.fs" />
+        <Compile Include="Backtester.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
