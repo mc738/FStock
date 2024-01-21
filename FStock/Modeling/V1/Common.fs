@@ -156,8 +156,22 @@ module Common =
                 |> fun np -> BuyResult.Success(np, newId)
             | LiquidityLimitAsMaximum ->
                 // Update to the amount of liquidity.
+                let newId = System.Guid.NewGuid().ToString("n")
+
+                let liquidityVolume = p.Liquidity / price
                 
-                failwith "todo"
+                { p with
+                    Liquidity = 0m // TODO check
+                    OpenPositions =
+                        p.OpenPositions
+                        @ [ { Id = newId
+                              ParentId = None
+                              Symbol = symbol
+                              Start = date
+                              BuyPrice = price
+                              Volume = liquidityVolume } ] }
+                |> fun np -> BuyResult.Success(np, newId)
+            
             
 
         member p.GetOpenPositionsForSymbol(symbol) =
