@@ -108,7 +108,37 @@ module Common =
                 | false -> BuyResult.Failure "Not enough liquidity"
             | PrioritizeLiquidity ->
                 // How much can be done with liquidity? Any left over amount is new investment.
-                ()
+                let newId = System.Guid.NewGuid().ToString("n")
+
+                match p.Liquidity >= totalCost with
+                | true ->
+                    { p with
+                        Liquidity = p.Liquidity - totalCost
+                        OpenPositions =
+                            p.OpenPositions
+                            @ [ { Id = newId
+                                  ParentId = None
+                                  Symbol = symbol
+                                  Start = date
+                                  BuyPrice = price
+                                  Volume = volume } ] }
+                    |> fun np -> BuyResult.Success(np, newId)
+                | false ->
+                    let liquidityVolume = p.Liquidity / price
+                    let newInvestment = (volume - liquidityVolume) * price
+                    
+                    { p with
+                        InitialInvestment = p.InitialInvestment + newInvestment
+                        Liquidity = 0m // TODO check
+                        OpenPositions =
+                            p.OpenPositions
+                            @ [ { Id = newId
+                                  ParentId = None
+                                  Symbol = symbol
+                                  Start = date
+                                  BuyPrice = price
+                                  Volume = volume } ] }
+                    |> fun np -> BuyResult.Success(np, newId)
             | PrioritizeNewInvestment // Essentially the same as NewInvestmentOnly in this case.
             | NewInvestmentOnly ->
                 let newId = System.Guid.NewGuid().ToString("n")
