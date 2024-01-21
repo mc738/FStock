@@ -19,8 +19,9 @@
         <Compile Include="Analysis\V1\History.fs" />
         <Compile Include="Analysis\V1\Rules.fs" />
         <Compile Include="Analysis\V1\Impl.fs" />
-        <Compile Include="Simulations\V1\Common.fs" />
-        <Compile Include="Simulations\V1\Testing.fs" />
+        <Compile Include="Modeling\V1\Common.fs" />
+        <Compile Include="Modeling\V1\Data.fs" />
+        <Compile Include="Modeling\V1\Backtesting.fs" />
     </ItemGroup>
 
     <ItemGroup>
