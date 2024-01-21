@@ -2,6 +2,7 @@
 
 open System
 
+[<RequireQualifiedAccess>]
 module Backtesting =
 
     type ModelState =
@@ -21,8 +22,8 @@ module Backtesting =
               BehaviourMaps = behaviourMaps
               Logs = [] }
 
-        member us.Buy(symbol, date, price, volume) =
-            match us.Portfolio.TryBuy(symbol, date, price, volume) with
+        member us.Buy(symbol, date, price, volume, investmentType) =
+            match us.Portfolio.TryBuy(symbol, date, price, volume, investmentType) with
             | BuyResult.Success(newPortfolio, newId) ->
                 { us with
                     Portfolio = newPortfolio
@@ -67,8 +68,12 @@ module Backtesting =
           HistoricPositionsHandler: HistoricPositionFilter -> HistoricPosition list
           NewStateRewriters: NewStateRewriter list }
 
+    [<RequireQualifiedAccess>]
+    type NewStateResult = Changed of NewState: ModelState * Log: string list
+
     let testCondition
         (ctx: TestingContext)
+        (state: ModelState)
         (position: OpenPosition)
         (current: CurrentPosition)
         (condition: PositionCondition)
@@ -84,7 +89,7 @@ module Backtesting =
                 >= percent
             | FixedLoss(value, valueMapper) -> valueMapper.GetValue current <= value
             | Duration length -> (current.Date - position.Start).Days >= length
-            | Bespoke handler -> handler position current ctx.HistoricPositionsHandler
+            | Bespoke handler -> handler position current ctx.HistoricPositionsHandler state.Portfolio
             | And(a, b) -> handle a && handle b
             | Or(a, b) -> handle a || handle b
             | All positionConditions -> positionConditions |> List.exists (fun c -> handle c |> not) |> not
@@ -105,6 +110,7 @@ module Backtesting =
 
     let handleBehaviours
         (ctx: TestingContext)
+        (state: ModelState)
         (date: DateTime)
         (position: OpenPosition)
         (behaviours: PrioritizedBehaviour list)
@@ -120,7 +126,9 @@ module Backtesting =
             |> List.sortBy (fun pb -> pb.Priority)
             |> List.fold
                 (fun (pa: PrioritizedActions list) pb ->
-                    match testCondition ctx position cp pb.Behaviour.Condition with
+                    // NOTE currently this has no way of checking what other actions have been triggered.
+                    // This does mean it works on first come/first serve basis
+                    match testCondition ctx state position cp pb.Behaviour.Condition with
                     | true ->
                         pa
                         @ [ { Actions = pb.Behaviour.Actions
@@ -151,13 +159,14 @@ module Backtesting =
                 |> List.fold
                     (fun (us: UpdateState) a ->
                         match a with
-                        | PositionAction.IncreasePositionByFixedAmount amount ->
+                        | PositionAction.IncreasePositionByFixedAmount(amount, investmentType) ->
                             match
                                 us.Buy(
                                     ta.Position.Symbol,
                                     date,
                                     ta.CurrentPosition.GetValue ctx.Settings.BuyValueMode,
-                                    amount
+                                    amount,
+                                    investmentType
                                 )
                             with
                             | UpdateStateResult.Success(ns, newPositionId) ->
@@ -165,7 +174,7 @@ module Backtesting =
 
                                 ns
                             | UpdateStateResult.Failure(ns, msg) -> ns
-                        | PositionAction.IncreasePositionByPercentage percent ->
+                        | PositionAction.IncreasePositionByPercentage(percent, investmentType) ->
                             let volumeIncrease = (ta.Position.Volume / 100m) * percent
 
                             match
@@ -173,7 +182,8 @@ module Backtesting =
                                     ta.Position.Symbol,
                                     date,
                                     ta.CurrentPosition.GetValue ctx.Settings.BuyValueMode,
-                                    volumeIncrease
+                                    volumeIncrease,
+                                    investmentType
                                 )
                             with
                             | UpdateStateResult.Success(ns, newPositionId) ->
@@ -234,10 +244,13 @@ module Backtesting =
     let progressState (ctx: TestingContext) (date: DateTime) (state: ModelState) =
         state.Portfolio.OpenPositions
         |> List.map (fun op -> op, fetchBehaviours state op)
-        |> List.choose (fun (op, pbs) -> handleBehaviours ctx date op pbs)
+        |> List.choose (fun (op, pbs) -> handleBehaviours ctx state date op pbs)
         |> (handleActions ctx state date)
         |> rewriteState ctx
         |> fun ns ->
-            { state with
-                Portfolio = ns.Portfolio
-                BehaviourMaps = ns.BehaviourMaps }
+            NewStateResult.Changed(
+                { state with
+                    Portfolio = ns.Portfolio
+                    BehaviourMaps = ns.BehaviourMaps },
+                ns.Logs
+            )
