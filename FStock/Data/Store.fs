@@ -216,7 +216,31 @@ module Store =
 
             report)
 
+    module Queries =
+
+        type EntryQuery =
+            { From: DateTime option
+              FromInclusive: bool
+              To: DateTime option
+              ToInclusive: bool
+              SymbolFilter: SymbolFilter }
+
+        and [<RequireQualifiedAccess>] SymbolFilter =
+            | All
+            | Stocks
+            | Etfs
+            | In of Symbols: string list
+            | NotIn of Symbols: string list
+            | EqualTo of Symbol: string
+            | NotEqualTo of Symbol: string
+
 
     type FStockStore(ctx: SqliteContext) =
+
+        interface IDisposable with
+            member this.Dispose() = (ctx :> IDisposable).Dispose()
+
+        static member Open(path: string) =
+            new FStockStore(SqliteContext.Open path)
 
         member _.GetStockForDate(symbol: string, date: DateTime) = getStockForDate ctx date symbol
