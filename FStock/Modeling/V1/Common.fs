@@ -347,27 +347,3 @@ module Common =
         { Position: OpenPosition
           Actions: PositionAction list
           CurrentPosition: CurrentPosition }
-
-    module Conditions =
-
-        /// <summary>
-        /// A behaviour to check the current position's low value vs a fixed lose.
-        /// This is to simulate if a stop-loss has been hit.
-        /// </summary>
-        /// <param name="stopLoss"></param>
-        let ``fixed stop-loss`` stopLoss =
-            PositionCondition.FixedLoss(stopLoss, ConditionValueMapper.Value ValueMode.Low)
-
-        /// <summary>
-        /// A behaviour to check the current position's low value vs a percentage lose.
-        /// This is to simulate if a stop-loss has been hit.
-        /// </summary>
-        /// <param name="stopLossPercent"></param>
-        let ``percentage stop-loss`` stopLossPercent =
-            PositionCondition.PercentageLoss(stopLossPercent, ConditionValueMapper.Value ValueMode.Low)
-
-        let ``fixed take profit`` takeProfit =
-            PositionCondition.FixedValue(takeProfit, ConditionValueMapper.Value ValueMode.High)
-
-        let ``percentage take profit`` takeProfitPercent =
-            PositionCondition.PercentageGrowth(takeProfitPercent, ConditionValueMapper.Value ValueMode.High)
