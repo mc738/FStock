@@ -22,6 +22,7 @@
         <Compile Include="Modeling\V1\Common.fs" />
         <Compile Include="Modeling\V1\Data.fs" />
         <Compile Include="Modeling\V1\Backtesting.fs" />
+        <Compile Include="Modeling\V1\Conditions.fs" />
     </ItemGroup>
 
     <ItemGroup>
