@@ -185,6 +185,7 @@ module Analytics =
 
     ()
 
+(*
 module Simulation =
 
     let run _ =
@@ -261,9 +262,9 @@ module Simulation =
             printfn "Not found."
 
         ()
+*)
 
-
-Simulation.run ()
+//Simulation.run ()
 let r = Analytics.build ()
 
 NewTest.run ctx
