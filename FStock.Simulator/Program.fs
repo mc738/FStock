@@ -323,8 +323,6 @@ module Simulator =
         run (ctx, state)
 
 
-
-
 let date = DateTime(2019, 2, 5)
 
 let endState = Simulator.start date 1000m
