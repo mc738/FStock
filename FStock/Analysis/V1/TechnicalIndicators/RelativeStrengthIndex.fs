@@ -131,6 +131,4 @@ module RelativeStrengthIndex =
                         Items = newItem :: state.Items })
             (CalculationState.Empty())
 
-
-
     ()
