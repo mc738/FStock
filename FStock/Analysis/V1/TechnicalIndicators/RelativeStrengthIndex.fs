@@ -8,9 +8,13 @@ open FStock.Analysis.V1.Persistence
 module RelativeStrengthIndex =
 
     type Parameters =
-        { Periods: int }
+        { Periods: int
+          RoundHandler: decimal -> decimal }
 
-        static member Default() = { Periods = 14 }
+        static member Default() = {
+            Periods = 14
+            RoundHandler = id 
+        }
 
     type InputItem = { Date: DateTime; Price: decimal }
 
@@ -30,7 +34,6 @@ module RelativeStrengthIndex =
         static member Empty() = { I = 0; Items = [] }
 
     let calculate (parameters: Parameters) (values: InputItem list) =
-        let gains = ResizeArray()
         let gains = Queue<decimal>()
         let losses = Queue<decimal>()
 
@@ -57,11 +60,7 @@ module RelativeStrengthIndex =
                     // Because the items are currently in reverse order we can just grab the head to get the last one,
                     let prevItem = state.Items.Head
 
-
-
-                    let difference = v.Price - prevItem.Close
-
-
+                    let difference = (v.Price - prevItem.Close) |> parameters.RoundHandler
 
                     let (gain, loss) =
                         match difference with
@@ -72,8 +71,8 @@ module RelativeStrengthIndex =
 
                         | d when d < 0m ->
                             gains.Enqueue(0)
-                            losses.Enqueue(d)
-                            0m, d
+                            losses.Enqueue(abs d)
+                            0m, abs d
                         | _ ->
                             gains.Enqueue(0)
                             losses.Enqueue(0)
@@ -90,10 +89,10 @@ module RelativeStrengthIndex =
                               AverageLoss = 0m
                               Rsi = 0m }
                         | i when i = parameters.Periods ->
-                            let avgGain = Seq.sum gains / (decimal gains.Count)
-                            let avgLoss = Seq.sum losses / (decimal losses.Count)
+                            let avgGain = (Seq.sum gains / (decimal gains.Count)) |> parameters.RoundHandler
+                            let avgLoss = (Seq.sum losses / (decimal losses.Count)) |> parameters.RoundHandler
 
-                            let rs = avgGain / avgLoss
+                            let rs = (avgGain / avgLoss) |> parameters.RoundHandler
 
                             { Date = v.Date
                               Close = v.Price
@@ -101,15 +100,15 @@ module RelativeStrengthIndex =
                               Loss = loss
                               AverageGain = avgGain
                               AverageLoss = avgLoss
-                              Rsi = 100m - (100m / (1m + rs)) }
+                              Rsi = (100m - (100m / (1m + rs))) |> parameters.RoundHandler }
                         | _ ->
                             let avgGain =
-                                (prevItem.AverageGain * decimal (parameters.Periods - 1) + gain)
-                                / decimal parameters.Periods
+                                ((prevItem.AverageGain * decimal (parameters.Periods - 1) + gain)
+                                / decimal parameters.Periods) |> parameters.RoundHandler
 
                             let avgLoss =
-                                (prevItem.AverageLoss * decimal (parameters.Periods - 1) + loss)
-                                / decimal parameters.Periods
+                                ((prevItem.AverageLoss * decimal (parameters.Periods - 1) + loss)
+                                / decimal parameters.Periods) |> parameters.RoundHandler
 
                             let rs = avgGain / avgLoss
 
@@ -119,7 +118,7 @@ module RelativeStrengthIndex =
                               Loss = loss
                               AverageGain = avgGain
                               AverageLoss = avgLoss
-                              Rsi = 100m - (100m / (1m + rs)) }
+                              Rsi = (100m - (100m / (1m + rs))) |> parameters.RoundHandler }
 
                     // If i is bigger than periods, progress the window by popping last items in gains and losses.
                     if state.I >= parameters.Periods then
