@@ -25,7 +25,13 @@ module RelativeStrengthIndex =
           Loss: decimal
           AverageGain: decimal
           AverageLoss: decimal
-          Rsi: decimal }
+          Rsi: decimal
+          /// <summary>
+          /// Specifies if the value can be discarded.
+          /// This normally means the item predates the first calculable entry and thus has no RSI value.
+          /// It also means the entry might not be used for further analysis. 
+          /// </summary>
+          Discardable: bool }
 
     type CalculationState =
         { I: int
@@ -51,7 +57,8 @@ module RelativeStrengthIndex =
                           Loss = 0m
                           AverageGain = 0m
                           AverageLoss = 0m
-                          Rsi = 0m }
+                          Rsi = 0m
+                          Discardable = true }
 
                     { state with
                         Items = item :: state.Items
@@ -89,7 +96,8 @@ module RelativeStrengthIndex =
                               Loss = loss
                               AverageGain = 0m
                               AverageLoss = 0m
-                              Rsi = 0m }
+                              Rsi = 0m
+                              Discardable = true }
                         | i when i = parameters.Periods ->
                             let avgGain = (Seq.sum gains / (decimal gains.Count)) |> parameters.RoundHandler
                             let avgLoss = (Seq.sum losses / (decimal losses.Count)) |> parameters.RoundHandler
@@ -102,7 +110,8 @@ module RelativeStrengthIndex =
                               Loss = loss
                               AverageGain = avgGain
                               AverageLoss = avgLoss
-                              Rsi = (100m - (100m / (1m + rs))) |> parameters.RoundHandler }
+                              Rsi = (100m - (100m / (1m + rs))) |> parameters.RoundHandler
+                              Discardable = false }
                         | _ ->
                             let avgGain =
                                 ((prevItem.AverageGain * decimal (parameters.Periods - 1) + gain)
@@ -120,7 +129,8 @@ module RelativeStrengthIndex =
                               Loss = loss
                               AverageGain = avgGain
                               AverageLoss = avgLoss
-                              Rsi = (100m - (100m / (1m + rs))) |> parameters.RoundHandler }
+                              Rsi = (100m - (100m / (1m + rs))) |> parameters.RoundHandler
+                              Discardable = false }
 
                     // If i is bigger than periods, progress the window by popping last items in gains and losses.
                     if state.I >= parameters.Periods then
