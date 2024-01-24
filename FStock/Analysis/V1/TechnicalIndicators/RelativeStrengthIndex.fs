@@ -34,6 +34,8 @@ module RelativeStrengthIndex =
         static member Empty() = { I = 0; Items = [] }
 
     let calculate (parameters: Parameters) (values: InputItem list) =
+        // Influenced by https://www.alpharithms.com/relative-strength-index-rsi-in-python-470209/
+        
         let gains = Queue<decimal>()
         let losses = Queue<decimal>()
 
@@ -110,7 +112,7 @@ module RelativeStrengthIndex =
                                 ((prevItem.AverageLoss * decimal (parameters.Periods - 1) + loss)
                                 / decimal parameters.Periods) |> parameters.RoundHandler
 
-                            let rs = avgGain / avgLoss
+                            let rs = (avgGain / avgLoss) |> parameters.RoundHandler
 
                             { Date = v.Date
                               Close = v.Price
@@ -122,8 +124,8 @@ module RelativeStrengthIndex =
 
                     // If i is bigger than periods, progress the window by popping last items in gains and losses.
                     if state.I >= parameters.Periods then
-                        gains.Dequeue |> ignore
-                        losses.Dequeue |> ignore
+                        gains.Dequeue() |> ignore
+                        losses.Dequeue() |> ignore
 
                     { state with
                         I = state.I + 1
