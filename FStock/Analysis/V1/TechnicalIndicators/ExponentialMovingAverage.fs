@@ -2,6 +2,7 @@
 
 open System
 
+[<RequireQualifiedAccess>]
 module ExponentialMovingAverage =
 
     type Parameters = { WindowSize: int; Smoothing: decimal }
@@ -41,7 +42,7 @@ module ExponentialMovingAverage =
                         // If equal to window size - 1 use SMA.
                         { Date = v.Date
                           Value = v.Price
-                          Ema = state.Items |> List.averageBy (fun i -> i.Value)
+                          Ema = state.Items |> List.map (fun i -> i.Value) |> fun l -> v.Price :: l |> List.average
                           Discardable = false }
                     | _ ->
                         { Date = v.Date
