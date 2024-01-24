@@ -6,10 +6,11 @@ open FSVG.Charts
 open FSVG.Dsl
 open FStock.Analysis
 open FStock.Analysis.V1
+open FStock.App
 open FStock.Data
 open FStock.Data.Persistence
 open FStock.Data.Store
-open FStock.Simulations.V1
+open FStock.Modeling.V1
 open FStock.Visualizations.Charts
 open Freql.Sqlite
 
@@ -185,6 +186,186 @@ module Analytics =
 
     ()
 
+module Backtester =
+
+    open FStock.App.Backtester.V1
+
+    let initialState (startDate: DateTime) =
+        ({ Portfolio =
+            { InitialInvestment = 1000m
+              Liquidity = 0m
+              OpenPositions = []
+              ClosedPositions = failwith "todo" }
+           Model =
+             { Behaviours = Map.empty
+               GeneralBehaviours = failwith "todo"
+               DefaultBehaviour = failwith "todo" }
+           StartDate = startDate
+           CurrentDate = startDate
+           BehaviourMaps =
+             [ { BehaviourId = failwith "todo"
+                 PositionId = ""
+                 Priority = 1 } ] }
+        : FStock.Modeling.V1.Backtesting.ModelState)
+
+    let start _ =
+
+        let storePath = "E:\\data\\stock_market"
+
+        let start = DateTime(2019, 1, 2)
+
+        let state = initialState start
+
+        let onProgression (state: Backtesting.ModelState) (log: string list) = true
+
+        let finalState = Backtester.V1.run storePath start state onProgression
+
+        ()
+
+module Tests =
+
+    open FStock.Analysis.V1.TechnicalIndicators
+
+    let rsi _ =
+        let values: RelativeStrengthIndex.InputItem list =
+            [ { Date = DateTime(2024, 1, 1)
+                Price = 54.8m }
+              { Date = DateTime(2024, 1, 2)
+                Price = 56.8m }
+              { Date = DateTime(2024, 1, 3)
+                Price = 57.85m }
+              { Date = DateTime(2024, 1, 4)
+                Price = 59.85m }
+              { Date = DateTime(2024, 1, 5)
+                Price = 60.57m }
+              { Date = DateTime(2024, 1, 6)
+                Price = 61.1m }
+              { Date = DateTime(2024, 1, 7)
+                Price = 62.17m }
+              { Date = DateTime(2024, 1, 8)
+                Price = 60.6m }
+              { Date = DateTime(2024, 1, 9)
+                Price = 62.35m }
+              { Date = DateTime(2024, 1, 10)
+                Price = 62.15m }
+              { Date = DateTime(2024, 1, 11)
+                Price = 62.35m }
+              { Date = DateTime(2024, 1, 12)
+                Price = 61.45m }
+              { Date = DateTime(2024, 1, 13)
+                Price = 62.8m }
+              { Date = DateTime(2024, 1, 14)
+                Price = 61.37m }
+              { Date = DateTime(2024, 1, 15)
+                Price = 62.5m }
+              { Date = DateTime(2024, 1, 16)
+                Price = 62.57m }
+              { Date = DateTime(2024, 1, 17)
+                Price = 60.8m }
+              { Date = DateTime(2024, 1, 18)
+                Price = 59.37m }
+              { Date = DateTime(2024, 1, 19)
+                Price = 60.35m }
+              { Date = DateTime(2024, 1, 20)
+                Price = 62.35m }
+              { Date = DateTime(2024, 1, 21)
+                Price = 62.17m }
+              { Date = DateTime(2024, 1, 22)
+                Price = 62.55m }
+              { Date = DateTime(2024, 1, 23)
+                Price = 64.55m }
+              { Date = DateTime(2024, 1, 24)
+                Price = 64.37m }
+              { Date = DateTime(2024, 1, 25)
+                Price = 65.3m }
+              { Date = DateTime(2024, 1, 26)
+                Price = 64.42m }
+              { Date = DateTime(2024, 1, 27)
+                Price = 62.9m }
+              { Date = DateTime(2024, 1, 28)
+                Price = 61.6m }
+              { Date = DateTime(2024, 1, 29)
+                Price = 62.05m }
+              { Date = DateTime(2024, 1, 30)
+                Price = 60.05m }
+              { Date = DateTime(2024, 1, 31)
+                Price = 59.7m }
+              { Date = DateTime(2024, 2, 1)
+                Price = 60.9m }
+              { Date = DateTime(2024, 2, 2)
+                Price = 60.25m }
+              { Date = DateTime(2024, 2, 3)
+                Price = 58.27m }
+              { Date = DateTime(2024, 2, 4)
+                Price = 58.7m }
+              { Date = DateTime(2024, 2, 5)
+                Price = 57.72m }
+              { Date = DateTime(2024, 2, 6)
+                Price = 58.1m }
+              { Date = DateTime(2024, 2, 7)
+                Price = 58.2m } ]
+
+        let parameters =
+            ({ Periods = 14
+               RoundHandler = fun v -> Math.Round(v, 2, MidpointRounding.AwayFromZero) }
+            : RelativeStrengthIndex.Parameters)
+
+        let result = RelativeStrengthIndex.calculate parameters values
+
+        ()
+
+    let ema _ =
+        let values: ExponentialMovingAverage.InputItem list =
+            [ { Date = DateTime(2024, 1, 1)
+                Price = 42.42m }
+              { Date = DateTime(2024, 1, 2)
+                Price = 43.27m }
+              { Date = DateTime(2024, 1, 3)
+                Price = 43.66m }
+              { Date = DateTime(2024, 1, 4)
+                Price = 43.4m }
+              { Date = DateTime(2024, 1, 5)
+                Price = 43.4m }
+              { Date = DateTime(2024, 1, 6)
+                Price = 44.27m }
+              { Date = DateTime(2024, 1, 7)
+                Price = 45.01m }
+              { Date = DateTime(2024, 1, 8)
+                Price = 44.48m }
+              { Date = DateTime(2024, 1, 9)
+                Price = 44.34m }
+              { Date = DateTime(2024, 1, 10)
+                Price = 44.44m }
+              { Date = DateTime(2024, 1, 11)
+                Price = 44.08m }
+              { Date = DateTime(2024, 1, 12)
+                Price = 44.16m }
+              { Date = DateTime(2024, 1, 13)
+                Price = 44.04m }
+              { Date = DateTime(2024, 1, 14)
+                Price = 43.74m }
+              { Date = DateTime(2024, 1, 15)
+                Price = 44.27m }
+              { Date = DateTime(2024, 1, 16)
+                Price = 44.11m }
+              { Date = DateTime(2024, 1, 17)
+                Price = 43.93m }
+              { Date = DateTime(2024, 1, 18)
+                Price = 44.35m }
+              { Date = DateTime(2024, 1, 19)
+                Price = 45.21m }
+              { Date = DateTime(2024, 1, 20)
+                Price = 44.92m } ]
+
+        let parameters =
+            ({ Smoothing = 2m 
+               WindowSize = 12 }
+            : ExponentialMovingAverage.Parameters)
+
+        let result = ExponentialMovingAverage.calculate parameters values
+
+        ()
+
 (*
 module Simulation =
 
@@ -265,6 +446,9 @@ module Simulation =
 *)
 
 //Simulation.run ()
+let r11 = Tests.ema ()
+
+let r1 = Tests.rsi ()
 let r = Analytics.build ()
 
 NewTest.run ctx
