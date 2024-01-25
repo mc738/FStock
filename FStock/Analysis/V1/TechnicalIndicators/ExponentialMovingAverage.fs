@@ -1,24 +1,28 @@
 ﻿namespace FStock.Analysis.V1.TechnicalIndicators
 
-open System
+open FStock.Analysis.V1.Core
+
 
 [<RequireQualifiedAccess>]
 module ExponentialMovingAverage =
 
+    open System
+    open FStock.Analysis.V1.Core
+
     type Parameters = { WindowSize: int; Smoothing: decimal }
 
-    type InputItem = { Date: DateTime; Price: decimal }
-
     type EmaItem =
-        { Date: DateTime
-          Value: decimal
-          Ema: decimal
-          /// <summary>
-          /// Specifies if the value can be discarded.
-          /// This normally means the item predates the first calculable entry and thus has no EMA value.
-          /// It also means the entry might not be used for further analysis. 
-          /// </summary>
-          Discardable: bool }
+        {
+            Date: DateTime
+            Value: decimal
+            Ema: decimal
+            /// <summary>
+            /// Specifies if the value can be discarded.
+            /// This normally means the item predates the first calculable entry and thus has no EMA value.
+            /// It also means the entry might not be used for further analysis.
+            /// </summary>
+            Discardable: bool
+        }
 
     type CalculationState =
         { I: int
@@ -26,7 +30,7 @@ module ExponentialMovingAverage =
 
         static member Empty() = { I = 0; Items = [] }
 
-    let calculate (parameters: Parameters) (values: InputItem list) =
+    let calculate (parameters: Parameters) (values: BasicInputItem list) =
         values
         |> List.fold
             (fun (state: CalculationState) v ->
@@ -42,7 +46,7 @@ module ExponentialMovingAverage =
                         // If equal to window size - 1 use SMA.
                         { Date = v.Date
                           Value = v.Price
-                          Ema = state.Items |> List.map (fun i -> i.Value) |> fun l -> v.Price :: l |> List.average
+                          Ema = state.Items |> List.map (fun i -> i.Value) |> prepend v.Price |> List.average
                           Discardable = false }
                     | _ ->
                         { Date = v.Date
@@ -57,3 +61,7 @@ module ExponentialMovingAverage =
                     I = state.I + 1
                     Items = newItem :: state.Items })
             (CalculationState.Empty())
+            
+    let generate (parameters: Parameters) (values: BasicInputItem list) =
+        calculate parameters values |> fun r -> r.Items
+       
