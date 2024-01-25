@@ -2,6 +2,7 @@
 
 open System
 open System.Collections.Generic
+open FStock.Analysis.V1.Core
 open FStock.Analysis.V1.Persistence
 
 [<RequireQualifiedAccess>]
@@ -15,8 +16,6 @@ module RelativeStrengthIndex =
             Periods = 14
             RoundHandler = id 
         }
-
-    type InputItem = { Date: DateTime; Price: decimal }
 
     type RsiItem =
         { Date: DateTime
@@ -39,7 +38,7 @@ module RelativeStrengthIndex =
 
         static member Empty() = { I = 0; Items = [] }
 
-    let calculate (parameters: Parameters) (values: InputItem list) =
+    let calculate (parameters: Parameters) (values: BasicInputItem list) =
         // Influenced by https://www.alpharithms.com/relative-strength-index-rsi-in-python-470209/
         
         let gains = Queue<decimal>()
