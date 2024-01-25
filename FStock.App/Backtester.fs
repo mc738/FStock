@@ -11,43 +11,16 @@ module Backtester =
 
         open FStock.Modeling.V1
 
-        module Behaviours =
-
-            module Optimistic =
-
-                /// <summary>
-                /// If a position is up 10% reinvest 10% more in it.
-                /// </summary>
-                let ``matched 10% reinvestment in winning position`` =
-                    ({ Condition = Conditions.``percentage take profit`` 10m
-                       Actions =
-                         [ PositionAction.IncreasePositionByPercentage(10m, InvestmentType.LiquidityOnly) ] }
-                    : PositionBehaviour)
-
-                let all = [ ``matched 10% reinvestment in winning position`` ]
-
-            module Pessimistic =
-
-                let all = []
-
-            module LowRiskTolerance =
-                let all = []
-
-
-            module HighRiskTolerance =
-                let all = []
-
-            let all =
-                [ yield! Optimistic.all
-                  yield! Pessimistic.all
-                  yield! LowRiskTolerance.all
-                  yield! HighRiskTolerance.all ]
-
         let advance (ctx: Backtesting.TestingContext) (date: DateTime) (state: Backtesting.ModelState) =
 
             Backtesting.progressState ctx date state
 
-        let run (storePath: string) (startDate: DateTime) (initialState: Backtesting.ModelState) =
+        let run
+            (storePath: string)
+            (startDate: DateTime)
+            (initialState: Backtesting.ModelState)
+            (progressionCallbackFn: Backtesting.ModelState -> string list -> bool)
+            =
 
             use store = FStockStore.Open storePath
 
@@ -67,10 +40,8 @@ module Backtester =
                 match advance testingCtx date state with
                 | Backtesting.NewStateResult.Changed(ns, log) ->
                     // Add extra checks
-
-
-                    handler (date.AddDays(1), ns)
+                    match progressionCallbackFn ns log with
+                    | true -> handler (date.AddDays(1), ns)
+                    | false -> ns
 
             handler (startDate, initialState)
-
-            ()
