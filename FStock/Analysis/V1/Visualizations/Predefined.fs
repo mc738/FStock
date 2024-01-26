@@ -1,12 +1,12 @@
 ﻿namespace FStock.Analysis.V1.Visualizations
 
-open FSVG
-open FSVG.Charts
-open Microsoft.FSharp.Core
 
 module Predefined =
 
     open FSVG
+    open FSVG.Charts
+    open Microsoft.FSharp.Core
+    open FStock.Analysis.V1.Visualizations.Charts
 
     type Settings =
         { LeftPadding: float
@@ -93,130 +93,55 @@ module Predefined =
             { Style.Default() with
                 Opacity = Some 1.
                 Stroke = Some "green"
-                StrokeWidth = Some 0.1 
+                StrokeWidth = Some 0.1
                 Fill = Some "green" }
 
 
-        [ // First create the axis
-          Line
-              { X1 = settings.LeftPadding
-                X2 = settings.LeftPadding
-                Y1 = settings.TopPadding
-                Y2 = settings.PriceChartHeight + settings.TopPadding
-                Style = axisStyle }
-          Line
-              { X1 = settings.LeftPadding + settings.Width
-                X2 = settings.LeftPadding + settings.Width
-                Y1 = settings.TopPadding
-                Y2 = settings.PriceChartHeight + settings.TopPadding
-                Style = axisStyle }
-          Line
-              { X1 = (settings.LeftPadding / 2.)
-                X2 = settings.LeftPadding + settings.Width + (settings.RightPadding / 2.)
-                Y1 = settings.PriceChartHeight + settings.TopPadding
-                Y2 = settings.PriceChartHeight + settings.TopPadding
-                Style = axisStyle }
-
-          createBar
-              25m
-              0m
-              100m
-              settings.TopPadding
-              (settings.PriceChartHeight + settings.TopPadding)
-              (settings.LeftPadding)
-              10.
-              true
-              testStyle
-          
-          createBar
-              50m
-              0m
-              100m
-              settings.TopPadding
-              (settings.PriceChartHeight + settings.TopPadding)
-              (settings.LeftPadding + 10.)
-              10.
-              true
-              testStyle
-          createBar
-              75m
-              0m
-              100m
-              settings.TopPadding
-              (settings.PriceChartHeight + settings.TopPadding)
-              (settings.LeftPadding + 20.)
-              10.
-              true
-              testStyle
-          
-          createBar
-              25m
-              0m
-              100m
-              settings.TopPadding
-              (settings.PriceChartHeight + settings.TopPadding)
-              (settings.LeftPadding + 50.)
-              10.
-              false
-              testStyle
-          
-          createBar
-              50m
-              0m
-              100m
-              settings.TopPadding
-              (settings.PriceChartHeight + settings.TopPadding)
-              (settings.LeftPadding + 60.)
-              10.
-              false
-              testStyle
-          createBar
-              75m
-              0m
-              100m
-              settings.TopPadding
-              (settings.PriceChartHeight + settings.TopPadding)
-              (settings.LeftPadding + 70.)
-              10.
-              false
-              testStyle ]
+        ({ MinimumX = settings.LeftPadding
+           MaximumX = settings.LeftPadding + settings.Width
+           MinimumY = settings.TopPadding
+           MaximumY = settings.PriceChartHeight + settings.TopPadding
+           LeftYAxis = true
+           RightYAxis = true
+           XAxisStartOverride = Some(settings.LeftPadding / 2.)
+           XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
+           AxisStyle = axisStyle }
+        : PriceChart.Parameters)
+        |> PriceChart.create
 
     let generateVolumeChart (settings: Settings) =
         let topOffset = settings.TopPadding + settings.PriceChartHeight
 
-
-        [ // First create the axis
-          Line
-              { X1 = settings.LeftPadding
-                X2 = settings.LeftPadding
-                Y1 = topOffset
-                Y2 = topOffset + settings.VolumeHeight
-                Style = axisStyle }
-          Line
-              { X1 = settings.LeftPadding + settings.Width
-                X2 = settings.LeftPadding + settings.Width
-                Y1 = topOffset
-                Y2 = topOffset + settings.VolumeHeight
-                Style = axisStyle }
-          Line
-              { X1 = (settings.LeftPadding / 2.)
-                X2 = settings.LeftPadding + settings.Width + (settings.RightPadding / 2.)
-                Y1 = topOffset + settings.VolumeHeight
-                Y2 = topOffset + settings.VolumeHeight
-                Style = axisStyle }
-
-          // Test
-          Line
-              { X1 = settings.LeftPadding
-                X2 = settings.LeftPadding + settings.Width
-                Y1 = normalizeYValue 25m 0m 100m topOffset (topOffset + settings.VolumeHeight) true
-                Y2 = normalizeYValue 75m 0m 100m topOffset (topOffset + settings.VolumeHeight) true
-                Style = axisStyle } ]
+        ({ MinimumX = settings.LeftPadding
+           MaximumX = settings.LeftPadding + settings.Width
+           MinimumY = topOffset
+           MaximumY = topOffset + settings.VolumeHeight
+           LeftYAxis = true
+           RightYAxis = true
+           XAxisStartOverride = Some (settings.LeftPadding / 2.)
+           XAxisEndOverride = Some (settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
+           AxisStyle = axisStyle }
+        : VolumeChart.Parameters)
+        |> VolumeChart.create
 
     let generateMacdChart (settings: Settings) =
         let topOffset =
             settings.TopPadding + settings.PriceChartHeight + settings.VolumeHeight
+            
+        ({ MinimumX = settings.LeftPadding
+           MaximumX = settings.LeftPadding + settings.Width
+           MinimumY = topOffset
+           MaximumY = topOffset + settings.MacdHeight
+           LeftYAxis = true
+           RightYAxis = true
+           XAxisStartOverride = Some (settings.LeftPadding / 2.)
+           XAxisEndOverride = Some (settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
+           AxisStyle = axisStyle }
+        : MacdChart.Parameters)
+        |> MacdChart.create
 
+
+        (*
         [ // First create the axis
           Line
               { X1 = settings.LeftPadding
@@ -236,6 +161,7 @@ module Predefined =
                 Y1 = topOffset + settings.MacdHeight
                 Y2 = topOffset + settings.MacdHeight
                 Style = axisStyle } ]
+          *)
 
     let generateRsiChart (settings: Settings) =
         let topOffset =
@@ -244,6 +170,19 @@ module Predefined =
             + settings.VolumeHeight
             + settings.RsiHeight
 
+        ({ MinimumX = settings.LeftPadding
+           MaximumX = settings.LeftPadding + settings.Width
+           MinimumY = topOffset
+           MaximumY = topOffset + settings.RsiHeight
+           LeftYAxis = true
+           RightYAxis = true
+           XAxisStartOverride = Some (settings.LeftPadding / 2.)
+           XAxisEndOverride = Some (settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
+           AxisStyle = axisStyle }
+        : RsiChart.Parameters)
+        |> RsiChart.create
+        
+        (*
         [ // First create the axis
           Line
               { X1 = settings.LeftPadding
@@ -305,6 +244,7 @@ module Predefined =
                     StrokeDashArray = None
                     Opacity = Some 0.2
                     GenericValues = Map.empty } } ]
+        *)
 
     let generate _ =
         // This is made up of 4 parts:
