@@ -29,7 +29,7 @@ module PriceChart =
         let maxValue = data |> List.maxBy (fun e -> e.HighValue) |> fun e -> e.HighValue
         let minValue = data |> List.minBy (fun e -> e.LowValue) |> fun e -> e.LowValue
         
-        let sectionPadding = 0.1
+        let sectionPadding = 0.5
         
         let sectionWidth = (parameters.MaximumX - parameters.MinimumY) / float data.Length
         
@@ -57,7 +57,7 @@ module PriceChart =
                     | ValueComparisonResult.Equal ->
                         normalizeValue v.CloseValue, normalizeValue v.OpenValue, SvgColor.Named "green"
 
-                let height = (parameters.MaximumY - parameters.MinimumY / 100.) * (top - bottom)
+                let height = ((parameters.MaximumY - parameters.MinimumY) / 100.) * (top - bottom)
 
                 [ ({ Height = height
                      Width = barWidth
@@ -79,7 +79,6 @@ module PriceChart =
                   : RectElement)
                   |> Element.Rect
 
-                  (*
                   ({ X1 =
                       parameters.MinimumX
                       + (float i * sectionWidth)
@@ -105,7 +104,7 @@ module PriceChart =
                          Opacity = Some 1.
                          GenericValues = Map.empty } }
                   : LineElement)
-                  |> Element.Line *)
+                  |> Element.Line
                    ])
             |> List.concat
     
