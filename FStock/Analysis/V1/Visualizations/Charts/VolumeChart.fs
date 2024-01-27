@@ -1,5 +1,7 @@
 ﻿namespace FStock.Analysis.V1.Visualizations.Charts
 
+open Microsoft.FSharp.Core
+
 [<RequireQualifiedAccess>]
 module VolumeChart =
 
@@ -14,7 +16,42 @@ module VolumeChart =
           RightYAxis: bool
           XAxisStartOverride: float option
           XAxisEndOverride: float option
-          AxisStyle: Style }
+          AxisStyle: Style
+          Data: StockData }
+
+
+    let createBars (parameters: Parameters) =
+        let data = parameters.Data.BaseData |> List.map (fun d -> d.VolumeValue)
+
+        let maxValue = data |> List.max
+        let minValue = 0m
+
+        let sectionPadding = 0.5
+
+        let sectionWidth =
+            (parameters.MaximumX - parameters.MinimumX)
+            / float parameters.Data.BaseData.Length
+
+        let barWidth = sectionWidth - (sectionPadding * 2.)
+
+        let barStyle =
+            { Style.Default() with
+                Opacity = Some 1.
+                Fill = Some "blue" }
+
+        data
+        |> List.mapi (fun i d ->
+            createBar
+                d
+                minValue
+                maxValue
+                parameters.MinimumY
+                parameters.MaximumY
+                (parameters.MinimumX + (sectionWidth * float i) + sectionPadding)
+                barWidth
+                true
+                barStyle)
+
 
     let create (parameters: Parameters) =
         [ Line
@@ -36,10 +73,4 @@ module VolumeChart =
                 Y2 = parameters.MaximumY
                 Style = parameters.AxisStyle }
 
-          // Test
-          Line
-              { X1 = parameters.MinimumX
-                X2 = parameters.MaximumX
-                Y1 = normalizeYValue 25m 0m 100m parameters.MinimumY parameters.MaximumY true
-                Y2 = normalizeYValue 75m 0m 100m parameters.MinimumY parameters.MaximumY true
-                Style = parameters.AxisStyle } ]
+          yield! createBars parameters ]
