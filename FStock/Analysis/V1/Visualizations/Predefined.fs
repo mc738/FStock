@@ -19,6 +19,10 @@ module Predefined =
           RsiHeight: float
           Width: float }
 
+    type Data =
+        { BaseData: FStock.Data.Persistence.Records.Stock list
+          AuxData: FStock.Data.Persistence.Records.Stock list }
+
     let axisStyle =
         { Fill = None
           Stroke = Some "black"
@@ -118,8 +122,8 @@ module Predefined =
            MaximumY = topOffset + settings.VolumeHeight
            LeftYAxis = true
            RightYAxis = true
-           XAxisStartOverride = Some (settings.LeftPadding / 2.)
-           XAxisEndOverride = Some (settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
+           XAxisStartOverride = Some(settings.LeftPadding / 2.)
+           XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
            AxisStyle = axisStyle }
         : VolumeChart.Parameters)
         |> VolumeChart.create
@@ -127,21 +131,21 @@ module Predefined =
     let generateMacdChart (settings: Settings) =
         let topOffset =
             settings.TopPadding + settings.PriceChartHeight + settings.VolumeHeight
-            
+
         ({ MinimumX = settings.LeftPadding
            MaximumX = settings.LeftPadding + settings.Width
            MinimumY = topOffset
            MaximumY = topOffset + settings.MacdHeight
            LeftYAxis = true
            RightYAxis = true
-           XAxisStartOverride = Some (settings.LeftPadding / 2.)
-           XAxisEndOverride = Some (settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
+           XAxisStartOverride = Some(settings.LeftPadding / 2.)
+           XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
            AxisStyle = axisStyle }
         : MacdChart.Parameters)
         |> MacdChart.create
 
 
-        (*
+    (*
         [ // First create the axis
           Line
               { X1 = settings.LeftPadding
@@ -176,13 +180,13 @@ module Predefined =
            MaximumY = topOffset + settings.RsiHeight
            LeftYAxis = true
            RightYAxis = true
-           XAxisStartOverride = Some (settings.LeftPadding / 2.)
-           XAxisEndOverride = Some (settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
+           XAxisStartOverride = Some(settings.LeftPadding / 2.)
+           XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
            AxisStyle = axisStyle }
         : RsiChart.Parameters)
         |> RsiChart.create
-        
-        (*
+
+    (*
         [ // First create the axis
           Line
               { X1 = settings.LeftPadding
@@ -246,7 +250,7 @@ module Predefined =
                     GenericValues = Map.empty } } ]
         *)
 
-    let generate _ =
+    let generate (data: Data) =
         // This is made up of 4 parts:
         // * Price chart (candle stick)
         // * Volume (bar)
