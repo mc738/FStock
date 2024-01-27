@@ -33,7 +33,7 @@ module PriceChart =
         
         let sectionWidth = (parameters.MaximumX - parameters.MinimumY) / float data.Length
         
-        let barWidth = (parameters.MaximumX - parameters.MinimumX - (sectionPadding * 2.)) / float data.Length
+        let barWidth = sectionWidth - (sectionPadding * 2.)
         
         data
             |> List.mapi (fun i v ->
@@ -98,7 +98,7 @@ module PriceChart =
                      Style =
                        { Fill = None
                          Stroke = color.GetValue() |> Some
-                         StrokeWidth = Some 1.
+                         StrokeWidth = Some 0.5
                          StrokeLineCap = None
                          StrokeDashArray = None
                          Opacity = Some 1.
