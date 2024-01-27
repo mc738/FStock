@@ -225,6 +225,24 @@ module Store =
               ToInclusive: bool
               SymbolFilter: SymbolFilter }
 
+            member eq.Build() =
+                let (tsSql, ps) =
+
+                    match eq.From, eq.FromInclusive, eq.To, eq.ToInclusive with
+                    | None, _, None, _ -> None, []
+                    | None, _, Some value, true -> Some "DATE(entry_date) <= DATE(@0)", [ box value ]
+                    | None, _, Some value, false -> Some "DATE(entry_date) < DATE(@0)", [ box value ]
+                    | Some value, true, None, _ -> Some "DATE(entry_date) >= DATE(@0)", [ box value ]
+                    | Some value, true, Some value1, true ->
+                        Some "DATE(entry_date) >= DATE(@0) AND DATE(entry_date) <= DATE(@0)", [ box value ]
+                    | Some value, true, Some value1, false -> failwith "todo"
+                    | Some value, false, None, _ -> Some "DATE(entry_date) > DATE(@0)", [ box value ]
+                    | Some value, false, Some value1, true -> failwith "todo"
+                    | Some value, false, Some value1, false -> failwith "todo"
+
+
+                ()
+
         and [<RequireQualifiedAccess>] SymbolFilter =
             | All
             | Stocks
@@ -244,3 +262,6 @@ module Store =
             new FStockStore(SqliteContext.Open path)
 
         member _.GetStockForDate(symbol: string, date: DateTime) = getStockForDate ctx date symbol
+
+        member _.GetPreviousXStockEntries(symbol: string, date: DateTime, x: int) =
+            previousXStockEntriesInclusive ctx x date symbol
