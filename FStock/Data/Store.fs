@@ -12,6 +12,74 @@ module Store =
 
     open Freql.Sqlite
     open FStock.Data.Persistence
+    
+    
+    module Queries =
+
+        type EntryQuery =
+            { From: DateTime option
+              FromInclusive: bool
+              To: DateTime option
+              ToInclusive: bool
+              SymbolFilter: SymbolFilter }
+
+            member eq.Build() =
+                let (tsSql, ps) =
+
+                    match eq.From, eq.FromInclusive, eq.To, eq.ToInclusive with
+                    | None, _, None, _ -> None, []
+                    | None, _, Some value, true -> Some "DATE(entry_date) <= DATE(@0)", [ box value ]
+                    | None, _, Some value, false -> Some "DATE(entry_date) < DATE(@0)", [ box value ]
+                    | Some value, true, None, _ -> Some "DATE(entry_date) >= DATE(@0)", [ box value ]
+                    | Some value, true, Some value1, true ->
+                        Some "DATE(entry_date) >= DATE(@0) AND DATE(entry_date) <= DATE(@1)", [ box value; box value1 ]
+                    | Some value, true, Some value1, false ->
+                        Some "DATE(entry_date) >= DATE(@0) AND DATE(entry_date) <= DATE(@1)", [ box value; box value1 ]
+                    | Some value, false, None, _ -> Some "DATE(entry_date) > DATE(@0)", [ box value ]
+                    | Some value, false, Some value1, true ->
+                        Some "DATE(entry_date) > DATE(@0) AND DATE(entry_date) <= DATE(@1)", [ box value; box value1 ]
+                    | Some value, false, Some value1, false ->
+                        Some "DATE(entry_date) > DATE(@0) AND DATE(entry_date) < DATE(@1)", [ box value; box value1 ]
+
+                let (sfSql, sfp) =
+                    match eq.SymbolFilter with
+                    | SymbolFilter.All -> None, []
+                    | SymbolFilter.Stocks -> failwith "todo"
+                    | SymbolFilter.Etfs -> failwith "todo"
+                    | SymbolFilter.In symbols ->
+                        let parts =
+                            symbols |> List.mapi (fun i s -> $"@{i + ps.Length}", box s) |> List.unzip
+
+                        parts
+                        |> fst
+                        |> String.concat ","
+                        |> fun r -> Some $"symbol IN ({r})", parts |> snd
+                    | SymbolFilter.NotIn symbols ->
+                        let parts =
+                            symbols |> List.mapi (fun i s -> $"@{i + ps.Length}", box s) |> List.unzip
+
+                        parts
+                        |> fst
+                        |> String.concat ","
+                        |> fun r -> Some $"symbol NOT IN ({r})", parts |> snd
+                    | SymbolFilter.EqualTo symbol -> Some $"symbol = @{ps.Length}", [ symbol ]
+                    | SymbolFilter.NotEqualTo symbol -> Some $"symbol <> @{ps.Length}", [ symbol ]
+
+                let sql =
+                    // TODO check if query is empty.
+                    [ tsSql; sfSql ] |> List.choose id |> String.concat " AND "
+                    |> fun r -> $"WHERE {r}"
+                
+                sql, ps @ sfp
+
+        and [<RequireQualifiedAccess>] SymbolFilter =
+            | All
+            | Stocks
+            | Etfs
+            | In of Symbols: string list
+            | NotIn of Symbols: string list
+            | EqualTo of Symbol: string
+            | NotEqualTo of Symbol: string
 
     type DayReport =
         { [<JsonPropertyName("date")>]
@@ -216,43 +284,12 @@ module Store =
 
             report)
 
-    module Queries =
-
-        type EntryQuery =
-            { From: DateTime option
-              FromInclusive: bool
-              To: DateTime option
-              ToInclusive: bool
-              SymbolFilter: SymbolFilter }
-
-            member eq.Build() =
-                let (tsSql, ps) =
-
-                    match eq.From, eq.FromInclusive, eq.To, eq.ToInclusive with
-                    | None, _, None, _ -> None, []
-                    | None, _, Some value, true -> Some "DATE(entry_date) <= DATE(@0)", [ box value ]
-                    | None, _, Some value, false -> Some "DATE(entry_date) < DATE(@0)", [ box value ]
-                    | Some value, true, None, _ -> Some "DATE(entry_date) >= DATE(@0)", [ box value ]
-                    | Some value, true, Some value1, true ->
-                        Some "DATE(entry_date) >= DATE(@0) AND DATE(entry_date) <= DATE(@0)", [ box value ]
-                    | Some value, true, Some value1, false -> failwith "todo"
-                    | Some value, false, None, _ -> Some "DATE(entry_date) > DATE(@0)", [ box value ]
-                    | Some value, false, Some value1, true -> failwith "todo"
-                    | Some value, false, Some value1, false -> failwith "todo"
-
-
-                ()
-
-        and [<RequireQualifiedAccess>] SymbolFilter =
-            | All
-            | Stocks
-            | Etfs
-            | In of Symbols: string list
-            | NotIn of Symbols: string list
-            | EqualTo of Symbol: string
-            | NotEqualTo of Symbol: string
-
-
+    let executeStockQuery (ctx: SqliteContext) (query: Queries.EntryQuery) =
+        let (sql, p) = query.Build()
+        
+        Operations.selectStockRecords ctx [ sql ] p
+        
+    
     type FStockStore(ctx: SqliteContext) =
 
         interface IDisposable with
@@ -264,4 +301,9 @@ module Store =
         member _.GetStockForDate(symbol: string, date: DateTime) = getStockForDate ctx date symbol
 
         member _.GetPreviousXStockEntries(symbol: string, date: DateTime, x: int) =
+            previousXStockEntries ctx x date symbol
+            
+        member _.GetPreviousXStockEntriesInclusive(symbol: string, date: DateTime, x: int) =
             previousXStockEntriesInclusive ctx x date symbol
+
+        member _.ExecuteStockQuery(query: Queries.EntryQuery) = executeStockQuery ctx query
