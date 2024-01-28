@@ -23,19 +23,20 @@ module PriceChart =
           RightYAxis: bool
           XAxisStartOverride: float option
           XAxisEndOverride: float option
-          AxisStyle: Style }
+          AxisStyle: Style
+          Data: StockData }
 
-    let createCandleSticks (parameters: Parameters) (data: FStock.Data.Persistence.Records.Stock list) =
-        let maxValue = data |> List.maxBy (fun e -> e.HighValue) |> fun e -> e.HighValue
-        let minValue = data |> List.minBy (fun e -> e.LowValue) |> fun e -> e.LowValue
+    let createCandleSticks (parameters: Parameters) =
+        let maxValue = parameters.Data.BaseData |> List.maxBy (fun e -> e.HighValue) |> fun e -> e.HighValue
+        let minValue = parameters.Data.BaseData |> List.minBy (fun e -> e.LowValue) |> fun e -> e.LowValue
         
         let sectionPadding = 0.5
         
-        let sectionWidth = (parameters.MaximumX - parameters.MinimumY) / float data.Length
+        let sectionWidth = (parameters.MaximumX - parameters.MinimumX) / float parameters.Data.BaseData.Length
         
         let barWidth = sectionWidth - (sectionPadding * 2.)
         
-        data
+        parameters.Data.BaseData
             |> List.mapi (fun i v ->
                 let normalizeValue (value: decimal) =
                     ({ MaxValue = maxValue
@@ -108,7 +109,7 @@ module PriceChart =
                    ])
             |> List.concat
     
-    let create (parameters: Parameters) (data: FStock.Data.Persistence.Records.Stock list) =
+    let create (parameters: Parameters) =
 
         [ // First create the axis
           Line
@@ -130,4 +131,4 @@ module PriceChart =
                 Y2 = parameters.MaximumY
                 Style = parameters.AxisStyle }
 
-          yield! createCandleSticks parameters data ]
+          yield! createCandleSticks parameters ]
