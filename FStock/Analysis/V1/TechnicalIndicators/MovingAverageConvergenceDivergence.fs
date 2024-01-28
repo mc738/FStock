@@ -42,6 +42,12 @@ module MovingAverageConvergenceDivergence =
         // NOTE currently this over calculates, there is no need to calculate short term or signal values that will be discarded.
         // However it should also be relatively cheap so will do for now.
 
+        // 1. Calculate a 12-period EMA of the price for the chosen time period.
+        // 2. Calculate a 26-period EMA of the price for the chosen time period.
+        // 3. Subtract the 26-period EMA from the 12-period EMA to create the MACD line.
+        // 4. Calculate a nine-period EMA of the MACD line (the result obtained from step 3) to create the signal line.
+        // 5. Subtract the signal line from the MACD line to create the histogram.
+        
         let longTermEma =
             ExponentialMovingAverage.generate
                 ({ WindowSize = parameters.LongTermPeriods
@@ -56,12 +62,18 @@ module MovingAverageConvergenceDivergence =
                 : ExponentialMovingAverage.Parameters)
                 values
 
+        // TODO check and clean up
+        // 
         let signalEma =
             ExponentialMovingAverage.generate
                 ({ WindowSize = parameters.SignalPeriods
                    Smoothing = parameters.SignalEmaSmoothing }
                 : ExponentialMovingAverage.Parameters)
-                values
+                (List.zip (longTermEma |> List.rev) (shortTermEma |> List.rev)
+                 |> List.map (fun (lt, st) ->
+                     { Date = st.Date
+                       Price = st.Ema - lt.Ema }))
+            //|> List.rev
 
         List.zip3 longTermEma shortTermEma signalEma
         |> List.map (fun (lt, st, s) ->
