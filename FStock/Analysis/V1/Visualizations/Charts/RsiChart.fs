@@ -1,9 +1,12 @@
 ﻿namespace FStock.Analysis.V1.Visualizations.Charts
 
+open FStock.Analysis.V1.Core
+open FStock.Analysis.V1.TechnicalIndicators
+open FStock.Data.Persistence
+
 [<RequireQualifiedAccess>]
 module RsiChart =
-    
-    
+
     open FSVG
 
     type Parameters =
@@ -15,9 +18,40 @@ module RsiChart =
           RightYAxis: bool
           XAxisStartOverride: float option
           XAxisEndOverride: float option
-          AxisStyle: Style }
+          AxisStyle: Style
+          Data: StockData }
+
+    let createRsiLine (parameters: Parameters) (data: RelativeStrengthIndex.RsiItem list) =
+
+        let sectionWidth =
+            (parameters.MaximumX - parameters.MinimumX)
+            / float parameters.Data.BaseData.Length
+
+        Path
+            { Commands =
+                data
+                |> List.mapi (fun i d ->
+                    ({ X = parameters.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
+                       Y = normalizeYValue d.Rsi 0m 100m parameters.MinimumY parameters.MaximumY true }
+                    : SvgPoint))
+                |> SvgPoints.Create
+                |> Helpers.createStraightCommands
+              Style =
+                { Style.Default() with
+                    Opacity = Some 1
+                    StrokeWidth = Some 0.1
+                    Stroke = Some "black" } }
+
+
 
     let create (parameters: Parameters) =
+        let rsiData =
+            parameters.Data.All ()
+            |> List.map (fun d -> ({ Date = d.EntryDate; Price = d.CloseValue }: BasicInputItem))
+            |> RelativeStrengthIndex.generate (RelativeStrengthIndex.Parameters.Default())
+            |> List.take parameters.Data.BaseData.Length
+            |> List.rev
+        
         [ Line
               { X1 = parameters.MinimumX
                 X2 = parameters.MinimumX
@@ -37,7 +71,6 @@ module RsiChart =
                 Y2 = parameters.MaximumY
                 Style = parameters.AxisStyle }
 
-          // Test
           Line
               { X1 = parameters.MinimumX
                 X2 = parameters.MaximumX
@@ -78,6 +111,6 @@ module RsiChart =
                     StrokeLineCap = None
                     StrokeDashArray = None
                     Opacity = Some 0.2
-                    GenericValues = Map.empty } } ]
-    
-
+                    GenericValues = Map.empty } }
+              
+          createRsiLine parameters rsiData ]
