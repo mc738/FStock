@@ -6,6 +6,12 @@ module Common =
     open FSVG
     open FSVG.Charts
 
+    type StockData =
+        { BaseData: FStock.Data.Persistence.Records.Stock list
+          AuxData: FStock.Data.Persistence.Records.Stock list }
+        
+        member sd.All() = (sd.BaseData @ sd.AuxData) |> List.sortBy (fun d -> d.EntryDate) 
+    
     let normalizedValueToPosition (minPos: float) (maxPos: float) (normalizedValue: float) =
         minPos + ((normalizedValue / 100.) * (maxPos - minPos))
 
@@ -74,5 +80,12 @@ module Common =
               RY = 0
               Style = style }
 
-
-    ()
+    let defaultAxisStyle =
+        { Fill = None
+          Stroke = Some "black"
+          StrokeWidth = Some 0.1
+          StrokeLineCap = None
+          StrokeDashArray = None
+          Opacity = Some 1.
+          GenericValues = Map.empty }
+    
