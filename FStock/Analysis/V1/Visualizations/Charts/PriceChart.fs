@@ -1,6 +1,8 @@
 ﻿namespace FStock.Analysis.V1.Visualizations.Charts
 
 open FSVG.Charts
+open FStock.Analysis.V1.Core
+open FStock.Analysis.V1.TechnicalIndicators
 
 [<RequireQualifiedAccess>]
 module PriceChart =
@@ -60,15 +62,59 @@ module PriceChart =
                                 "central" (*"text-anchor", "middle"; "font-family", "\"roboto\""*) ]
                               |> Map.ofList } }
 
-              Line {
-                  X1 = parameters.MinimumX - 0.5
-                  X2 = parameters.MaximumX + 0.5
-                  Y1 = normalizeYValue (i * 20m) 0m 100m parameters.MinimumY parameters.MaximumY true 
-                  Y2 = normalizeYValue (i * 20m) 0m 100m parameters.MinimumY parameters.MaximumY true
-                  Style = { parameters.AxisStyle with Opacity = Some 0.5 } 
-              }
-              
+              Line
+                  { X1 = parameters.MinimumX - 0.5
+                    X2 = parameters.MaximumX + 0.5
+                    Y1 = normalizeYValue (i * 20m) 0m 100m parameters.MinimumY parameters.MaximumY true
+                    Y2 = normalizeYValue (i * 20m) 0m 100m parameters.MinimumY parameters.MaximumY true
+                    Style =
+                      { parameters.AxisStyle with
+                          Opacity = Some 0.5 } }
+
               ])
+
+    let createMovingAverageLines
+        (parameters: Parameters)
+        (minValue: decimal)
+        (maxValue: decimal)
+        (ma50: SimpleMovingAverage.SmaItem list)
+        (ma200: SimpleMovingAverage.SmaItem list)
+        =
+
+        let sectionWidth =
+            (parameters.MaximumX - parameters.MinimumX)
+            / float parameters.Data.BaseData.Length
+
+
+        [ Path
+              { Commands =
+                  ma50
+                  |> List.mapi (fun i d ->
+                      ({ X = parameters.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
+                         Y = normalizeYValue d.Sma minValue maxValue parameters.MinimumY parameters.MaximumY true }
+                      : SvgPoint))
+                  |> SvgPoints.Create
+                  |> Helpers.createBezierCommands
+                Style =
+                  { Style.Default() with
+                      Opacity = Some 1
+                      StrokeWidth = Some 0.1
+                      Stroke = Some "blue" } }
+
+          Path
+              { Commands =
+                  ma200
+                  |> List.mapi (fun i d ->
+                      ({ X = parameters.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
+                         Y = normalizeYValue d.Sma minValue maxValue parameters.MinimumY parameters.MaximumY true }
+                      : SvgPoint))
+                  |> SvgPoints.Create
+                  |> Helpers.createBezierCommands
+                Style =
+                  { Style.Default() with
+                      Opacity = Some 1
+                      StrokeWidth = Some 0.1
+                      Stroke = Some "orange" } } ]
 
     let createCandleSticks (parameters: Parameters) (minValue: decimal) (maxValue: decimal) =
 
@@ -178,6 +224,23 @@ module PriceChart =
 
         let (minValue, maxValue) = createMinMaxValues baseMinValue baseMaxValue
 
+        let maItems =
+            parameters.Data.All()
+            |> List.map (fun d ->
+                { Date = d.EntryDate
+                  Price = d.CloseValue }
+                : BasicInputItem)
+
+        let ma50 =
+            SimpleMovingAverage.generate { WindowSize = 50 } maItems
+            |> List.take parameters.Data.BaseData.Length
+            |> List.rev
+
+
+        let ma200 =
+            SimpleMovingAverage.generate { WindowSize = 200 } maItems
+            |> List.take parameters.Data.BaseData.Length
+            |> List.rev
 
         [ // First create the axis
           (*
@@ -216,4 +279,5 @@ module PriceChart =
           yield! createLabels parameters minValue maxValue
 
           yield! createCurrentLine parameters minValue maxValue
+          yield! createMovingAverageLines parameters minValue maxValue ma50 ma200
           yield! createCandleSticks parameters minValue maxValue ]
