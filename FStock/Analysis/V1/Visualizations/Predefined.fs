@@ -1,5 +1,7 @@
 ﻿namespace FStock.Analysis.V1.Visualizations
 
+open FStock.Analysis.V1.Visualizations.Charts
+
 
 module Predefined =
 
@@ -18,10 +20,6 @@ module Predefined =
           MacdHeight: float
           RsiHeight: float
           Width: float }
-
-    type Data =
-        { BaseData: FStock.Data.Persistence.Records.Stock list
-          AuxData: FStock.Data.Persistence.Records.Stock list }
 
     let axisStyle =
         { Fill = None
@@ -91,7 +89,7 @@ module Predefined =
               RY = 0
               Style = style }
 
-    let generatePriceChart (settings: Settings) =
+    let generatePriceChart (settings: Settings) (stockData: StockData) =
 
         let testStyle =
             { Style.Default() with
@@ -109,11 +107,12 @@ module Predefined =
            RightYAxis = true
            XAxisStartOverride = Some(settings.LeftPadding / 2.)
            XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
-           AxisStyle = axisStyle }
+           AxisStyle = axisStyle
+           Data = stockData }
         : PriceChart.Parameters)
         |> PriceChart.create
 
-    let generateVolumeChart (settings: Settings) =
+    let generateVolumeChart (settings: Settings) (stockData: StockData) =
         let topOffset = settings.TopPadding + settings.PriceChartHeight
 
         ({ MinimumX = settings.LeftPadding
@@ -124,11 +123,12 @@ module Predefined =
            RightYAxis = true
            XAxisStartOverride = Some(settings.LeftPadding / 2.)
            XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
-           AxisStyle = axisStyle }
+           AxisStyle = axisStyle
+           Data = stockData }
         : VolumeChart.Parameters)
         |> VolumeChart.create
 
-    let generateMacdChart (settings: Settings) =
+    let generateMacdChart (settings: Settings) (stockData: StockData) =
         let topOffset =
             settings.TopPadding + settings.PriceChartHeight + settings.VolumeHeight
 
@@ -140,7 +140,8 @@ module Predefined =
            RightYAxis = true
            XAxisStartOverride = Some(settings.LeftPadding / 2.)
            XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
-           AxisStyle = axisStyle }
+           AxisStyle = axisStyle
+           Data = stockData }
         : MacdChart.Parameters)
         |> MacdChart.create
 
@@ -167,7 +168,7 @@ module Predefined =
                 Style = axisStyle } ]
           *)
 
-    let generateRsiChart (settings: Settings) =
+    let generateRsiChart (settings: Settings) (stockData: StockData) =
         let topOffset =
             settings.TopPadding
             + settings.PriceChartHeight
@@ -182,7 +183,8 @@ module Predefined =
            RightYAxis = true
            XAxisStartOverride = Some(settings.LeftPadding / 2.)
            XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
-           AxisStyle = axisStyle }
+           AxisStyle = axisStyle
+           Data = stockData }
         : RsiChart.Parameters)
         |> RsiChart.create
 
@@ -250,7 +252,7 @@ module Predefined =
                     GenericValues = Map.empty } } ]
         *)
 
-    let generate (data: Data) =
+    let generate (data: StockData) =
         // This is made up of 4 parts:
         // * Price chart (candle stick)
         // * Volume (bar)
@@ -268,10 +270,10 @@ module Predefined =
               RsiHeight = 40.
               Width = 180. }
 
-        [ yield! generatePriceChart settings
-          yield! generateVolumeChart settings
-          yield! generateMacdChart settings
-          yield! generateRsiChart settings ]
+        [ yield! generatePriceChart settings data
+          yield! generateVolumeChart settings data
+          yield! generateMacdChart settings data
+          yield! generateRsiChart settings data ]
         |> SvgDocument.Create
         |> fun d ->
             d.Render(
