@@ -46,6 +46,20 @@ module PriceChart =
                                 "central" (*"text-anchor", "middle"; "font-family", "\"roboto\""*) ]
                               |> Map.ofList } }
 
+              Text
+                  { X = (parameters.MaximumX + 2.)
+                    Y = normalizeYValue (i * 20m) 0m 100m parameters.MinimumY parameters.MaximumY true
+                    Value = [ TextType.Literal((minValue + ((diff / 5m) * i)).ToString("#.##")) ]
+                    Style =
+                      { Style.Default() with
+                          Opacity = Some 1.
+                          Fill = Some "black"
+                          GenericValues =
+                              [ "font-size", "4px"
+                                "alignment-baseline",
+                                "central" (*"text-anchor", "middle"; "font-family", "\"roboto\""*) ]
+                              |> Map.ofList } }
+
               ])
 
     let createCandleSticks (parameters: Parameters) (minValue: decimal) (maxValue: decimal) =
@@ -170,7 +184,7 @@ module PriceChart =
                       GenericValues =
                           [ "font-size", "4px" (*"text-anchor", "middle"; "font-family", "\"roboto\""*) ]
                           |> Map.ofList } }
-          *)    
+          *)
 
           Line
               { X1 = parameters.MinimumX
