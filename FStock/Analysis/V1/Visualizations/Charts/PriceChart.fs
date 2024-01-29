@@ -26,6 +26,27 @@ module PriceChart =
           AxisStyle: Style
           Data: StockData }
 
+    let createLabels (parameters: Parameters) (minValue: decimal) (maxValue: decimal) =
+
+        let diff = maxValue - minValue
+
+        [
+          // For now have 5
+          Text
+              { X = 1.
+                Y = parameters.MinimumY + 5.
+                Value = [ TextType.Literal (diff.ToString("#.##")) ]
+                Style =
+                  { Style.Default() with
+                      Opacity = Some 1.
+                      Fill = Some "black"
+                      GenericValues =
+                          [ "font-size", "3px" (*"text-anchor", "middle"; "font-family", "\"roboto\""*) ]
+                          |> Map.ofList } }
+
+
+          ]
+
     let createCandleSticks (parameters: Parameters) (minValue: decimal) (maxValue: decimal) =
 
         let sectionPadding = 0.5
@@ -122,15 +143,18 @@ module PriceChart =
 
     let create (parameters: Parameters) =
 
-        let maxValue =
+        let baseMaxValue =
             parameters.Data.BaseData
             |> List.maxBy (fun e -> e.HighValue)
             |> fun e -> e.HighValue
 
-        let minValue =
+        let baseMinValue =
             parameters.Data.BaseData
             |> List.minBy (fun e -> e.LowValue)
             |> fun e -> e.LowValue
+
+        let (minValue, maxValue) = createMinMaxValues baseMinValue baseMaxValue
+
 
         [ // First create the axis
           Text
@@ -164,5 +188,7 @@ module PriceChart =
                 Y2 = parameters.MaximumY
                 Style = parameters.AxisStyle }
 
+          yield! createLabels parameters minValue maxValue
+          
           yield! createCurrentLine parameters minValue maxValue
           yield! createCandleSticks parameters minValue maxValue ]
