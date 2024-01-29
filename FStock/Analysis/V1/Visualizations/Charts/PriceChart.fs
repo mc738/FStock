@@ -30,22 +30,23 @@ module PriceChart =
 
         let diff = maxValue - minValue
 
-        [
-          // For now have 5
-          Text
-              { X = 1.
-                Y = parameters.MinimumY + 5.
-                Value = [ TextType.Literal (diff.ToString("#.##")) ]
-                Style =
-                  { Style.Default() with
-                      Opacity = Some 1.
-                      Fill = Some "black"
-                      GenericValues =
-                          [ "font-size", "3px" (*"text-anchor", "middle"; "font-family", "\"roboto\""*) ]
-                          |> Map.ofList } }
+        [ 1m; 2m; 3m; 4m; 5m ]
+        |> List.collect (fun i ->
+            [ Text
+                  { X = 1.
+                    Y = normalizeYValue (i * 20m) 0m 100m parameters.MinimumY parameters.MaximumY true
+                    Value = [ TextType.Literal((minValue + ((diff / 5m) * i)).ToString("#.##")) ]
+                    Style =
+                      { Style.Default() with
+                          Opacity = Some 1.
+                          Fill = Some "black"
+                          GenericValues =
+                              [ "font-size", "4px"
+                                "alignment-baseline",
+                                "central" (*"text-anchor", "middle"; "font-family", "\"roboto\""*) ]
+                              |> Map.ofList } }
 
-
-          ]
+              ])
 
     let createCandleSticks (parameters: Parameters) (minValue: decimal) (maxValue: decimal) =
 
@@ -157,6 +158,7 @@ module PriceChart =
 
 
         [ // First create the axis
+          (*
           Text
               { X = 1.
                 Y = parameters.MinimumY + 5.
@@ -168,6 +170,7 @@ module PriceChart =
                       GenericValues =
                           [ "font-size", "4px" (*"text-anchor", "middle"; "font-family", "\"roboto\""*) ]
                           |> Map.ofList } }
+          *)    
 
           Line
               { X1 = parameters.MinimumX
@@ -189,6 +192,6 @@ module PriceChart =
                 Style = parameters.AxisStyle }
 
           yield! createLabels parameters minValue maxValue
-          
+
           yield! createCurrentLine parameters minValue maxValue
           yield! createCandleSticks parameters minValue maxValue ]
