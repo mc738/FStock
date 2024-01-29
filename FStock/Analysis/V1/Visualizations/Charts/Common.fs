@@ -89,3 +89,19 @@ module Common =
           Opacity = Some 1.
           GenericValues = Map.empty }
     
+    let roundToMultiple (multiple: decimal) (value: decimal) (roundUp: bool) =
+        let v = match roundUp with true -> System.Math.Ceiling value | false -> value 
+        
+        System.Math.Round(v / multiple) * multiple
+        
+    let createMinMaxValues (minValue: decimal) (maxValue: decimal) =
+        let diff = maxValue - minValue
+        
+        let multiple =
+            match diff with
+            | _ when diff > 1000m -> 100m
+            | _ when diff > 100m -> 10m
+            | _ when diff > 10m -> 2m
+            
+        roundToMultiple multiple minValue false, roundToMultiple multiple maxValue true
+   
