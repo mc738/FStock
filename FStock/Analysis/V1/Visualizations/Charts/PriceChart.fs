@@ -60,6 +60,14 @@ module PriceChart =
                                 "central" (*"text-anchor", "middle"; "font-family", "\"roboto\""*) ]
                               |> Map.ofList } }
 
+              Line {
+                  X1 = parameters.MinimumX - 0.5
+                  X2 = parameters.MaximumX + 0.5
+                  Y1 = normalizeYValue (i * 20m) 0m 100m parameters.MinimumY parameters.MaximumY true 
+                  Y2 = normalizeYValue (i * 20m) 0m 100m parameters.MinimumY parameters.MaximumY true
+                  Style = { parameters.AxisStyle with Opacity = Some 0.5 } 
+              }
+              
               ])
 
     let createCandleSticks (parameters: Parameters) (minValue: decimal) (maxValue: decimal) =
