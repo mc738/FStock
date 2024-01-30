@@ -1,6 +1,7 @@
 ﻿namespace FStock.Analysis.V1.TechnicalIndicators
 
 open FStock.Analysis.V1.Core
+open Microsoft.FSharp.Core
 
 [<RequireQualifiedAccess>]
 module SimpleMovingAverage =
@@ -10,9 +11,11 @@ module SimpleMovingAverage =
 
     type Parameters = { WindowSize: int }
 
+    [<CLIMutable>]
     type SmaItem =
         {
-            Date: DateTime
+            Symbol: string
+            EntryDate: DateTime
             Value: decimal
             Sma: decimal
             /// <summary>
@@ -37,13 +40,15 @@ module SimpleMovingAverage =
                     match state.I with
                     | i when i < (parameters.WindowSize - 1) ->
                         // If less than window size - 1 there is no EMA to be calculated.
-                        { Date = v.Date
+                        { Symbol = v.Symbol
+                          EntryDate = v.Date
                           Value = v.Price
                           Sma = 0m
                           Discardable = true }
                     | _ ->
                         // If equal to window size - 1 use SMA.
-                        { Date = v.Date
+                        { Symbol = v.Symbol
+                          EntryDate = v.Date
                           Value = v.Price
                           Sma =
                             state.Items
