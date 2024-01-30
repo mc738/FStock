@@ -22,9 +22,11 @@ module MovingAverageConvergenceDivergence =
               SignalPeriods = 9
               SignalEmaSmoothing = 2m }
 
+    [<CLIMutable>]
     type MacdItem =
         {
-            Date: DateTime
+            Symbol: string
+            EntryDate: DateTime
             LongTermEma: decimal
             ShortTermEma: decimal
             SignalEma: decimal
@@ -71,13 +73,15 @@ module MovingAverageConvergenceDivergence =
                 : ExponentialMovingAverage.Parameters)
                 (List.zip (longTermEma |> List.rev) (shortTermEma |> List.rev)
                  |> List.map (fun (lt, st) ->
-                     { Date = st.Date
+                     { Symbol = lt.Symbol
+                       Date = st.EntryDate
                        Price = st.Ema - lt.Ema }))
             //|> List.rev
 
         List.zip3 longTermEma shortTermEma signalEma
         |> List.map (fun (lt, st, s) ->
-            { Date = lt.Date
+            { Symbol = lt.Symbol
+              EntryDate = lt.EntryDate
               LongTermEma = lt.Ema
               ShortTermEma = st.Ema
               SignalEma = s.Ema
