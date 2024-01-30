@@ -222,8 +222,6 @@ module PriceChart =
             |> List.minBy (fun e -> e.LowValue)
             |> fun e -> e.LowValue
 
-        let (minValue, maxValue) = createMinMaxValues baseMinValue baseMaxValue
-
         let maItems =
             parameters.Data.All()
             |> List.map (fun d ->
@@ -241,6 +239,19 @@ module PriceChart =
             SimpleMovingAverage.generate { WindowSize = 200 } maItems
             |> List.take parameters.Data.BaseData.Length
             |> List.rev
+
+
+
+        let (minValue, maxValue) =
+            createMinMaxValues
+                (List.min
+                    [ baseMinValue
+                      ma50 |> List.minBy (fun v -> v.Sma) |> (fun r -> r.Sma)
+                      ma200 |> List.minBy (fun v -> v.Sma) |> (fun r -> r.Sma) ])
+                (List.max
+                    [ baseMaxValue
+                      ma50 |> List.maxBy (fun v -> v.Sma) |> (fun r -> r.Sma)
+                      ma200 |> List.maxBy (fun v -> v.Sma) |> (fun r -> r.Sma) ])
 
         [ // First create the axis
           (*
