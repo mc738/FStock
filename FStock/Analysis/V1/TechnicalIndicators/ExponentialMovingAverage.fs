@@ -11,9 +11,11 @@ module ExponentialMovingAverage =
 
     type Parameters = { WindowSize: int; Smoothing: decimal }
 
+    [<CLIMutable>]
     type EmaItem =
         {
-            Date: DateTime
+            Symbol: string
+            EntryDate: DateTime
             Value: decimal
             Ema: decimal
             /// <summary>
@@ -38,18 +40,21 @@ module ExponentialMovingAverage =
                     match state.I with
                     | i when i < (parameters.WindowSize - 1) ->
                         // If less than window size - 1 there is no EMA to be calculated.
-                        { Date = v.Date
+                        { Symbol = v.Symbol
+                          EntryDate = v.Date
                           Value = v.Price
                           Ema = 0m
                           Discardable = true }
                     | i when i = (parameters.WindowSize - 1) ->
                         // If equal to window size - 1 use SMA.
-                        { Date = v.Date
+                        { Symbol = v.Symbol
+                          EntryDate = v.Date
                           Value = v.Price
                           Ema = state.Items |> List.map (fun i -> i.Value) |> prepend v.Price |> List.average
                           Discardable = false }
                     | _ ->
-                        { Date = v.Date
+                        { Symbol = v.Symbol
+                          EntryDate = v.Date
                           Value = v.Price
                           Ema =
                             (v.Price * (parameters.Smoothing / decimal (1 + parameters.WindowSize)))
