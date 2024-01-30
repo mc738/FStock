@@ -57,3 +57,6 @@ module SimpleMovingAverage =
                     I = state.I + 1
                     Items = newItem :: state.Items })
             (CalculationState.Empty())
+
+    let generate (parameters: Parameters) (values: BasicInputItem list) =
+        calculate parameters values |> fun r -> r.Items
