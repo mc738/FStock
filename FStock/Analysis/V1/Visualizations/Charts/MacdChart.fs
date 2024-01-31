@@ -119,7 +119,8 @@ module MacdChart =
         let data =
             parameters.Data.All()
             |> List.map (fun d ->
-                ({ Date = d.EntryDate
+                ({ Symbol = ""
+                   Date = d.EntryDate
                    Price = d.CloseValue }
                 : BasicInputItem))
             |> MovingAverageConvergenceDivergence.generate (MovingAverageConvergenceDivergence.Parameters.Default())
