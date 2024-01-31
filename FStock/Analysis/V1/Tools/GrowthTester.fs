@@ -101,7 +101,7 @@ module GrowthTester =
 
                 let percentDiff = ((diff) / testResultReport.BuyPrice) * 100m
 
-                $"{testResultReport.Symbol} - buy: {testResultReport.BuyPrice} sell: {testResultReport.SellPrice} diff: {diff} ({percentDiff}%%) (message: {testResultReport.ConditionMessage})"
+                $"{testResultReport.Symbol} - buy: {testResultReport.BuyPrice} sell: {testResultReport.SellPrice} diff: {diff} ({percentDiff}%%) len: {(testResultReport.EndDate - testResultReport.StartDate).TotalDays} (message: {testResultReport.ConditionMessage})"
             | NoResult symbol -> $"{symbol} - [No result]"
 
     and TestResultReport =
@@ -113,7 +113,7 @@ module GrowthTester =
           ConditionName: string
           ConditionMessage: string }
 
-    let run (parameters: Parameters) (symbol: string) (startPrice: decimal) (startDate: DateTime) =
+    let run (parameters: Parameters) (symbol: string) (startPrice: decimal) =
 
         let rec handler (date: DateTime) (currentPeriod: int) =
             match DateTime.UtcNow.Date <= date with
@@ -125,7 +125,7 @@ module GrowthTester =
                     | ConditionTestResult.True(name, message) ->
 
                         { Symbol = symbol
-                          StartDate = startDate
+                          StartDate = parameters.StartDate
                           EndDate = date
                           BuyPrice = startPrice
                           SellPrice = cp
@@ -135,7 +135,7 @@ module GrowthTester =
                     | ConditionTestResult.False -> handler (date.AddDays(1)) (currentPeriod + 1)
                 | None -> handler (date.AddDays(1)) (currentPeriod + 1)
 
-        handler startDate (1)
+        handler parameters.StartDate (1)
 
 
     ()
