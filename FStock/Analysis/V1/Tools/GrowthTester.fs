@@ -14,20 +14,35 @@ module GrowthTester =
     type Parameters =
         { StartDate: DateTime
           Test: Condition
-          FetchHandler: Records.Stock -> DateTime -> Records.Stock Option }
+          FetchHandler: string -> DateTime -> decimal Option }
 
-    and Condition =
+    and [<RequireQualifiedAccess>] Condition =
         | TakeProfit of Percent: decimal
         | LossStop of Percent: decimal
         | FixedPeriod of PeriodSize: int
-        | Bespoke of Fn: (Records.Stock -> Records.Stock -> bool)
+        | Bespoke of Name: string * Fn: (decimal -> decimal -> bool)
         | And of Condition * Condition
         | Or of Condition * Condition
         | Any of Condition list
         | All of Condition list
-
-    and RunUntil =
-        | 
+        
+        member c.Test(startingPrice: decimal, currentPrice: decimal) =
+            match c with
+            | Condition.TakeProfit percent ->
+                match 
+                
+                failwith "todo"
+            | Condition.LossStop percent -> failwith "todo"
+            | Condition.FixedPeriod periodSize -> failwith "todo"
+            | Condition.Bespoke(name, fn) -> failwith "todo"
+            | Condition.And(condition, condition1) -> failwith "todo"
+            | Condition.Or(condition, condition1) -> failwith "todo"
+            | Condition.Any conditions -> failwith "todo"
+            | Condition.All conditions -> failwith "todo"
+            
+    and [<RequireQualifiedAccess>] ConditionTestResult =
+        | True of Type: string * Message : string
+        | False
     
     and TestResult =
         | Finished
