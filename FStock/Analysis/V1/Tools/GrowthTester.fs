@@ -13,7 +13,7 @@ module GrowthTester =
 
     type Parameters =
         { StartDate: DateTime
-          Test: Condition
+          Condition: Condition
           FetchHandler: string -> DateTime -> decimal Option }
 
     and [<RequireQualifiedAccess>] Condition =
@@ -87,23 +87,55 @@ module GrowthTester =
                     | Error _ -> ConditionTestResult.False
 
     and [<RequireQualifiedAccess>] ConditionTestResult =
-        | True of Type: string * Message: string
+        | True of Name: string * Message: string
         | False
 
     and TestResult =
-        | Finished
-        | NoResult
+        | Finished of TestResultReport
+        | NoResult of Symbol: string
+
+        member tr.Serialize() =
+            match tr with
+            | Finished testResultReport ->
+                let diff = testResultReport.SellPrice - testResultReport.BuyPrice
+
+                let percentDiff = ((diff) / testResultReport.BuyPrice) * 100m
+
+                $"{testResultReport.Symbol} - buy: {testResultReport.BuyPrice} sell: {testResultReport.SellPrice} diff: {diff} ({percentDiff}%%) (message: {testResultReport.ConditionMessage})"
+            | NoResult symbol -> $"{symbol} - [No result]"
 
     and TestResultReport =
         { Symbol: string
           StartDate: DateTime
           EndDate: DateTime
           BuyPrice: decimal
-          SellPrice: decimal }
+          SellPrice: decimal
+          ConditionName: string
+          ConditionMessage: string }
 
+    let run (parameters: Parameters) (symbol: string) (startPrice: decimal) (startDate: DateTime) =
 
-    let run () =
-        
-        ()
+        let rec handler (date: DateTime) (currentPeriod: int) =
+            match DateTime.UtcNow.Date <= date with
+            | true -> TestResult.NoResult symbol
+            | false ->
+                match parameters.FetchHandler symbol date with
+                | Some cp ->
+                    match parameters.Condition.Test(startPrice, cp, currentPeriod) with
+                    | ConditionTestResult.True(name, message) ->
+
+                        { Symbol = symbol
+                          StartDate = startDate
+                          EndDate = date
+                          BuyPrice = startPrice
+                          SellPrice = cp
+                          ConditionName = name
+                          ConditionMessage = message }
+                        |> TestResult.Finished
+                    | ConditionTestResult.False -> handler (date.AddDays(1)) (currentPeriod + 1)
+                | None -> handler (date.AddDays(1)) (currentPeriod + 1)
+
+        handler startDate (1)
+
 
     ()
