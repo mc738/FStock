@@ -47,7 +47,7 @@ module RsiChart =
     let create (parameters: Parameters) =
         let rsiData =
             parameters.Data.All ()
-            |> List.map (fun d -> ({ Date = d.EntryDate; Price = d.CloseValue }: BasicInputItem))
+            |> List.map (fun d -> ({ Symbol = ""; Date = d.EntryDate; Price = d.CloseValue }: BasicInputItem))
             |> RelativeStrengthIndex.generate (RelativeStrengthIndex.Parameters.Default())
             |> List.take parameters.Data.BaseData.Length
             |> List.rev
