@@ -123,29 +123,51 @@ module GrowthTester =
           ConditionName: string
           ConditionMessage: string }
 
+    
+    
     let run (parameters: Parameters) (symbol: string) (startPrice: decimal) =
 
-        let rec handler (date: DateTime) (currentPeriod: int) =
-            match DateTime.UtcNow.Date <= date with
-            | true -> TestResult.NoResult symbol
-            | false ->
-                match parameters.FetchHandler symbol date with
-                | Some cp ->
-                    match parameters.Condition.Test(startPrice, cp, currentPeriod) with
-                    | ConditionTestResult.True(name, message) ->
+        match parameters.FetchHandler with
+        | Individual fn ->
+            let rec handler (date: DateTime) (currentPeriod: int) =
+                match DateTime.UtcNow.Date <= date with
+                | true -> TestResult.NoResult symbol
+                | false ->
+                    match fn symbol date with
+                    | Some cp ->
+                        match parameters.Condition.Test(startPrice, cp, currentPeriod) with
+                        | ConditionTestResult.True(name, message) ->
 
-                        { Symbol = symbol
-                          StartDate = parameters.StartDate
-                          EndDate = date
-                          BuyPrice = startPrice
-                          SellPrice = cp
-                          ConditionName = name
-                          ConditionMessage = message }
-                        |> TestResult.Finished
-                    | ConditionTestResult.False -> handler (date.AddDays(1)) (currentPeriod + 1)
-                | None -> handler (date.AddDays(1)) (currentPeriod + 1)
+                            { Symbol = symbol
+                              StartDate = parameters.StartDate
+                              EndDate = date
+                              BuyPrice = startPrice
+                              SellPrice = cp
+                              ConditionName = name
+                              ConditionMessage = message }
+                            |> TestResult.Finished
+                        | ConditionTestResult.False -> handler (date.AddDays(1)) (currentPeriod + 1)
+                    | None -> handler (date.AddDays(1)) (currentPeriod + 1)
 
-        handler parameters.StartDate (1)
+            handler parameters.StartDate (1)
+        | Group fn ->
+            let rec handler  (currentPeriod: int) (items: FetchedGroupItem list) =
+                match items.IsEmpty with
+                | true -> TestResult.NoResult symbol
+                | false ->
+                    let (head, tail) = items.Head, items.Tail
+                    
+                    match parameters.Condition.Test(startPrice, head.Value, currentPeriod) with
+                        | ConditionTestResult.True(name, message) ->
+                            { Symbol = symbol
+                              StartDate = parameters.StartDate
+                              EndDate = head.Date
+                              BuyPrice = startPrice
+                              SellPrice = head.Value
+                              ConditionName = name
+                              ConditionMessage = message }
+                            |> TestResult.Finished
+                        | ConditionTestResult.False -> handler (currentPeriod + 1) tail
 
-
-    ()
+            fn symbol |> handler 1
+            
