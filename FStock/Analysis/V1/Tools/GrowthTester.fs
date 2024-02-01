@@ -14,8 +14,18 @@ module GrowthTester =
     type Parameters =
         { StartDate: DateTime
           Condition: Condition
-          FetchHandler: string -> DateTime -> decimal Option }
+          FetchHandler: FetchType }
+        
+    and FetchType =
+        | Individual of (string -> DateTime -> decimal Option)
+        | Group of (string -> FetchedGroupItem list)
 
+    and FetchedGroupItem =
+        {
+            Date: DateTime
+            Value: decimal
+        }
+    
     and [<RequireQualifiedAccess>] Condition =
         | TakeProfit of Percent: decimal
         | LossStop of Percent: decimal
