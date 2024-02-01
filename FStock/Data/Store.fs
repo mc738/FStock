@@ -298,6 +298,8 @@ module Store =
         static member Open(path: string) =
             new FStockStore(SqliteContext.Open path)
 
+        member _.GetAllStockMetaData() = getAllStockMetadata ctx
+        
         member _.GetStockForDate(symbol: string, date: DateTime) = getStockForDate ctx date symbol
 
         member _.GetPreviousXStockEntries(symbol: string, date: DateTime, x: int) =
@@ -306,4 +308,7 @@ module Store =
         member _.GetPreviousXStockEntriesInclusive(symbol: string, date: DateTime, x: int) =
             previousXStockEntriesInclusive ctx x date symbol
 
+        member _.GetNextXStockEntries(symbol: string, date: DateTime, x: int) =
+            nextXStockEntries ctx x date symbol
+        
         member _.ExecuteStockQuery(query: Queries.EntryQuery) = executeStockQuery ctx query
