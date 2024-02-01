@@ -33,7 +33,7 @@ module GrowthTester =
                 | true -> ConditionTestResult.True("take-profit", $"take profit ({percent}%%) hit")
                 | false -> ConditionTestResult.False
             | Condition.LossStop percent ->
-                match startingPrice - ((startingPrice / 100m) * percent) > startingPrice with
+                match startingPrice - ((startingPrice / 100m) * percent) > currentPrice with
                 | true -> ConditionTestResult.True("loss-stop", $"loss stop ({percent}%%) hit")
                 | false -> ConditionTestResult.False
             | Condition.FixedPeriod periodSize ->
