@@ -225,7 +225,8 @@ module PriceChart =
         let maItems =
             parameters.Data.All()
             |> List.map (fun d ->
-                { Date = d.EntryDate
+                { Symbol = ""
+                  Date = d.EntryDate
                   Price = d.CloseValue }
                 : BasicInputItem)
 
