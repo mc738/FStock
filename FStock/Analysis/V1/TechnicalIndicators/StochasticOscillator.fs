@@ -15,7 +15,7 @@ module StochasticOscillator =
             EntryDate: DateTime
         }
    
-    let calculate (current: decimal) (previousHigh: decimal) (previousLow: decimal) =
+    let calculateK (current: decimal) (previousHigh: decimal) (previousLow: decimal) =
         ((current - previousLow) / (previousHigh - previousLow)) * 100m
     
     
