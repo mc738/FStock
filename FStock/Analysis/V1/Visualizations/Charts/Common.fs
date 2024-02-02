@@ -1,5 +1,7 @@
 ﻿namespace FStock.Analysis.V1.Visualizations.Charts
 
+open System
+
 [<AutoOpen>]
 module Common =
 
@@ -90,9 +92,12 @@ module Common =
           GenericValues = Map.empty }
     
     let roundToMultiple (multiple: decimal) (value: decimal) (roundUp: bool) =
-        let v = match roundUp with true -> System.Math.Ceiling value | false -> value 
+        let (v, mpr) =
+            match roundUp with
+            | true -> System.Math.Ceiling value, MidpointRounding.AwayFromZero
+            | false -> value, MidpointRounding.ToZero 
         
-        System.Math.Round(v / multiple) * multiple
+        System.Math.Round(v / multiple, mpr) * multiple
         
     let createMinMaxValues (minValue: decimal) (maxValue: decimal) =
         let diff = maxValue - minValue
@@ -102,6 +107,7 @@ module Common =
             | _ when diff > 1000m -> 100m
             | _ when diff > 100m -> 10m
             | _ when diff > 10m -> 2m
+            | _ -> 1m
             
         roundToMultiple multiple minValue false, roundToMultiple multiple maxValue true
    
