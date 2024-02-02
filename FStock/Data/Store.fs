@@ -34,7 +34,7 @@ module Store =
                     | Some value, true, Some value1, true ->
                         Some "DATE(entry_date) >= DATE(@0) AND DATE(entry_date) <= DATE(@1)", [ box value; box value1 ]
                     | Some value, true, Some value1, false ->
-                        Some "DATE(entry_date) >= DATE(@0) AND DATE(entry_date) <= DATE(@1)", [ box value; box value1 ]
+                        Some "DATE(entry_date) >= DATE(@0) AND DATE(entry_date) < DATE(@1)", [ box value; box value1 ]
                     | Some value, false, None, _ -> Some "DATE(entry_date) > DATE(@0)", [ box value ]
                     | Some value, false, Some value1, true ->
                         Some "DATE(entry_date) > DATE(@0) AND DATE(entry_date) <= DATE(@1)", [ box value; box value1 ]
