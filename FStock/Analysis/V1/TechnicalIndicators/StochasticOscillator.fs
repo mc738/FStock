@@ -16,8 +16,6 @@ module StochasticOscillator =
         }
    
     let calculate (current: decimal) (previousHigh: decimal) (previousLow: decimal) =
-        ()
+        ((current - previousLow) / (previousHigh - previousLow)) * 100m
     
     
-    ()
-
