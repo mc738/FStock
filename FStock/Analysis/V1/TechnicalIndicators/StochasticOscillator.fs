@@ -4,13 +4,19 @@ module StochasticOscillator =
 
     open System    
     
+    type Parameters =
+        {
+            WindowSize: int
+        }
+    
     type StochasticOscillatorItem =
         {
             Symbol: string
             EntryDate: DateTime
         }
    
-    let 
+    let calculate (current: decimal) (previousHigh: decimal) (previousLow: decimal) =
+        ()
     
     
     ()
