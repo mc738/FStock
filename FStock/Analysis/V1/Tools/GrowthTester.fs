@@ -1,6 +1,7 @@
 ﻿namespace FStock.Analysis.V1.Tools
 
 open System
+open Freql.Sqlite
 
 /// <summary>
 /// Used to test growth of a position over time.
@@ -122,8 +123,14 @@ module GrowthTester =
           SellPrice: decimal
           ConditionName: string
           ConditionMessage: string }
-
     
+    type TableListingItem =
+        {
+            Name: string
+            
+            TakeProfit: decimal option
+            LossStop: decimal option
+        }
     
     let run (parameters: Parameters) (symbol: string) (startPrice: decimal) =
 
@@ -170,4 +177,12 @@ module GrowthTester =
                         | ConditionTestResult.False -> handler (currentPeriod + 1) tail
 
             fn symbol |> handler 1
-            
+
+    
+    let runAndSave (ctx: SqliteContext) (symbol: string) (startDate: DateTime) (takeProfit: decimal option) (stopLoss: decimal option) (periodCount: int option) =
+        let tableNameSuffix =
+            match takeProfit, stopLoss with
+            | Some tp, Some sp -> ()
+        
+        
+        ()
