@@ -1,12 +1,13 @@
 ﻿namespace FStock.Modeling.V1
 
-open System
-open FStock.Data
-open FStock.Data.Store
-open Freql.Sqlite
-
 [<RequireQualifiedAccess>]
 module Data =
+    
+    open System
+    open Freql.Sqlite
+    open FStock.Data
+    open FStock.Data.Store
+    open FStock.Data.Domain
     
     let getCurrentPosition (store: FStockStore) (openPosition: OpenPosition) (date: DateTime) =
         // TODO add cache?
@@ -18,7 +19,8 @@ module Data =
                High = s.HighValue
                Low = s.LowValue
                Close = s.CloseValue
-               AdjustedClose = s.AdjustedCloseValue }
+               AdjustedClose = s.AdjustedCloseValue
+               Volume = s.VolumeValue }
             : CurrentPosition))
 
     let getHistoricPositions (store: FStockStore) (filter: HistoricPositionFilter) : HistoricPosition list =
