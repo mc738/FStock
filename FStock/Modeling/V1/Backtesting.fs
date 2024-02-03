@@ -1,10 +1,13 @@
 ﻿namespace FStock.Modeling.V1
 
-open System
+open FStock.Data.Domain
 
 [<RequireQualifiedAccess>]
 module Backtesting =
 
+    open System
+    open FStock.Data.Domain
+    
     type ModelState =
         { Portfolio: Portfolio
           Model: TradingModel
@@ -58,8 +61,8 @@ module Backtesting =
     type NewStateRewriter = UpdateState -> UpdateState
 
     type TestingSettings =
-        { BuyValueMode: ValueMode
-          SellValueMode: ValueMode
+        { BuyOHLCValue: OHLCValue
+          SellOHLCValue: OHLCValue
           ActionCombinationMode: ActionCombinationMode }
 
     type TestingContext =
@@ -164,7 +167,7 @@ module Backtesting =
                                 us.Buy(
                                     ta.Position.Symbol,
                                     date,
-                                    ta.CurrentPosition.GetValue ctx.Settings.BuyValueMode,
+                                    ta.CurrentPosition.GetValue ctx.Settings.BuyOHLCValue,
                                     amount,
                                     investmentType
                                 )
@@ -181,7 +184,7 @@ module Backtesting =
                                 us.Buy(
                                     ta.Position.Symbol,
                                     date,
-                                    ta.CurrentPosition.GetValue ctx.Settings.BuyValueMode,
+                                    ta.CurrentPosition.GetValue ctx.Settings.BuyOHLCValue,
                                     volumeIncrease,
                                     investmentType
                                 )
@@ -197,7 +200,7 @@ module Backtesting =
                                 us.Sell(
                                     ta.Position.Id,
                                     date,
-                                    ta.CurrentPosition.GetValue ctx.Settings.SellValueMode,
+                                    ta.CurrentPosition.GetValue ctx.Settings.SellOHLCValue,
                                     amount
                                 )
                             with
@@ -220,7 +223,7 @@ module Backtesting =
                                 us.Sell(
                                     ta.Position.Id,
                                     date,
-                                    ta.CurrentPosition.GetValue ctx.Settings.BuyValueMode,
+                                    ta.CurrentPosition.GetValue ctx.Settings.SellOHLCValue,
                                     volumeDecrease
                                 )
                             with
