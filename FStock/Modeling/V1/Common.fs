@@ -1,10 +1,14 @@
 ﻿namespace FStock.Modeling.V1
 
-open System
+open FStock.Data.Domain
+
 
 [<AutoOpen>]
 module Common =
 
+    open System
+    open FStock.Data.Domain
+    
     type OpenPosition =
         { Id: string
           ParentId: string option
@@ -30,15 +34,17 @@ module Common =
           High: decimal
           Low: decimal
           Close: decimal
-          AdjustedClose: decimal }
+          AdjustedClose: decimal
+          Volume: decimal }
 
-        member cp.GetValue(mode: ValueMode) =
+        member cp.GetValue(mode: OHLCValue) =
             match mode with
-            | ValueMode.Open -> cp.Open
-            | ValueMode.Close -> cp.Close
-            | ValueMode.High -> cp.High
-            | ValueMode.Low -> cp.Low
-            | ValueMode.AdjustedClose -> cp.AdjustedClose
+            | OHLCValue.Open -> cp.Open
+            | OHLCValue.Close -> cp.Close
+            | OHLCValue.High -> cp.High
+            | OHLCValue.Low -> cp.Low
+            | OHLCValue.AdjustedClose -> cp.AdjustedClose
+            | OHLCValue.Volume  -> cp.Volume
 
     and HistoricPosition =
         { Symbol: string
@@ -267,29 +273,22 @@ module Common =
           HistoricPositionHandler: HistoricPositionHandler }
 
     and ConditionValueMapper =
-        | Value of Mode: ValueMode
-        | FixedAdjustment of Mode: ValueMode * Adjustment: decimal
-        | PercentageIncrease of Mode: ValueMode * Percentage: decimal
-        | PercentageDecrease of Mode: ValueMode * Percentage: decimal
+        | Value of OHLC: OHLCValue
+        | FixedAdjustment of OHLC: OHLCValue * Adjustment: decimal
+        | PercentageIncrease of OHLC: OHLCValue * Percentage: decimal
+        | PercentageDecrease of OHLC: OHLCValue * Percentage: decimal
 
         member cvm.GetValue(position: CurrentPosition) =
-            let getBaseValue (mode: ValueMode) =
-                match mode with
-                | ValueMode.Open -> position.Open
-                | ValueMode.Close -> position.Close
-                | ValueMode.High -> position.High
-                | ValueMode.Low -> position.Low
-                | ValueMode.AdjustedClose -> position.AdjustedClose
 
             match cvm with
-            | Value mode -> getBaseValue mode
-            | FixedAdjustment(mode, adjustment) -> getBaseValue mode + adjustment
+            | Value mode -> position.GetValue mode
+            | FixedAdjustment(mode, adjustment) -> position.GetValue mode + adjustment
             | PercentageIncrease(mode, percentage) ->
-                let bv = getBaseValue mode
+                let bv = position.GetValue mode
 
                 bv + ((bv / 100m) * percentage)
             | PercentageDecrease(mode, percentage) ->
-                let bv = getBaseValue mode
+                let bv = position.GetValue mode
 
                 bv - ((bv / 100m) * percentage)
 
@@ -329,15 +328,8 @@ module Common =
           Priority: int }
 
     and SimulationSettings =
-        { ValueMode: ValueMode
+        { OHLCValue: OHLCValue 
           ActionCombinationMode: ActionCombinationMode }
-
-    and [<RequireQualifiedAccess>] ValueMode =
-        | Open
-        | Close
-        | High
-        | Low
-        | AdjustedClose
 
     and [<RequireQualifiedAccess>] ActionCombinationMode =
         | Simple
