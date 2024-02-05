@@ -80,15 +80,15 @@ module Common =
             /// The initial amount invested in the portfolio.
             /// This will only increase but will not found money reinvested.
             /// </summary>
-            InitialInvestment: decimal
+            Capital: decimal
             Liquidity: decimal
             OpenPositions: OpenPosition list
             ClosedPositions: ClosedPosition list
         }
 
-        member p.AddInitialInvestment(value: decimal) =
+        member p.AddCapital(value: decimal) =
             { p with
-                InitialInvestment = p.InitialInvestment + value
+                Capital = p.Capital + value
                 Liquidity = p.Liquidity + value }
 
         member p.TryBuy(symbol, date, price, volume, ?investmentType) =
@@ -134,7 +134,7 @@ module Common =
                     let newInvestment = (volume - liquidityVolume) * price
                     
                     { p with
-                        InitialInvestment = p.InitialInvestment + newInvestment
+                        Capital =  p.Capital + newInvestment
                         Liquidity = 0m // TODO check
                         OpenPositions =
                             p.OpenPositions
@@ -150,7 +150,7 @@ module Common =
                 let newId = System.Guid.NewGuid().ToString("n")
 
                 { p with
-                    InitialInvestment = p.InitialInvestment + totalCost
+                    Capital = p.Capital + totalCost
                     OpenPositions =
                         p.OpenPositions
                         @ [ { Id = newId
