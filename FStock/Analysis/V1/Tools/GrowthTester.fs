@@ -2,6 +2,7 @@
 
 open System
 open Freql.Sqlite
+open Microsoft.FSharp.Core
 
 /// <summary>
 /// Used to test growth of a position over time.
@@ -16,17 +17,13 @@ module GrowthTester =
         { StartDate: DateTime
           Condition: Condition
           FetchHandler: FetchType }
-        
+
     and FetchType =
         | Individual of (string -> DateTime -> decimal Option)
         | Group of (string -> FetchedGroupItem list)
 
-    and FetchedGroupItem =
-        {
-            Date: DateTime
-            Value: decimal
-        }
-    
+    and FetchedGroupItem = { Date: DateTime; Value: decimal }
+
     and [<RequireQualifiedAccess>] Condition =
         | TakeProfit of Percent: decimal
         | LossStop of Percent: decimal
@@ -123,15 +120,15 @@ module GrowthTester =
           SellPrice: decimal
           ConditionName: string
           ConditionMessage: string }
-    
+
+    [<CLIMutable>]
     type TableListingItem =
-        {
-            Name: string
-            
-            TakeProfit: decimal option
-            LossStop: decimal option
-        }
-    
+        { Name: string
+          StartDate: DateTime
+          TakeProfit: decimal option
+          LossStop: decimal option
+          MaxPeriods: int option }
+
     let run (parameters: Parameters) (symbol: string) (startPrice: decimal) =
 
         match parameters.FetchHandler with
@@ -158,31 +155,42 @@ module GrowthTester =
 
             handler parameters.StartDate (1)
         | Group fn ->
-            let rec handler  (currentPeriod: int) (items: FetchedGroupItem list) =
+            let rec handler (currentPeriod: int) (items: FetchedGroupItem list) =
                 match items.IsEmpty with
                 | true -> TestResult.NoResult symbol
                 | false ->
                     let (head, tail) = items.Head, items.Tail
-                    
+
                     match parameters.Condition.Test(startPrice, head.Value, currentPeriod) with
-                        | ConditionTestResult.True(name, message) ->
-                            { Symbol = symbol
-                              StartDate = parameters.StartDate
-                              EndDate = head.Date
-                              BuyPrice = startPrice
-                              SellPrice = head.Value
-                              ConditionName = name
-                              ConditionMessage = message }
-                            |> TestResult.Finished
-                        | ConditionTestResult.False -> handler (currentPeriod + 1) tail
+                    | ConditionTestResult.True(name, message) ->
+                        { Symbol = symbol
+                          StartDate = parameters.StartDate
+                          EndDate = head.Date
+                          BuyPrice = startPrice
+                          SellPrice = head.Value
+                          ConditionName = name
+                          ConditionMessage = message }
+                        |> TestResult.Finished
+                    | ConditionTestResult.False -> handler (currentPeriod + 1) tail
 
             fn symbol |> handler 1
 
-    
-    let runAndSave (ctx: SqliteContext) (symbol: string) (startDate: DateTime) (takeProfit: decimal option) (stopLoss: decimal option) (periodCount: int option) =
+
+    let runAndSave
+        (ctx: SqliteContext)
+        (symbol: string)
+        (startDate: DateTime)
+        (takeProfit: decimal option)
+        (stopLoss: decimal option)
+        (periodCount: int option)
+        =
         let tableNameSuffix =
             match takeProfit, stopLoss with
-            | Some tp, Some sp -> ()
-        
-        
+            | Some tp, Some sl -> "tp_{}_sl_{}"
+            
+            | None, Some sl -> $"tp_no_sl_{sl}"
+            | Some value, None -> failwith "todo"
+            | None, None -> "tp_no_sl_no"
+
+
         ()
