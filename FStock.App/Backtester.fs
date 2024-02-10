@@ -1,6 +1,7 @@
 ﻿namespace FStock.App
 
 open System
+open FStock.Data.Domain
 open FStock.Data.Store
 open FStock.Modeling.V1
 open Freql.Sqlite
@@ -26,8 +27,8 @@ module Backtester =
 
             let testingCtx =
                 ({ Settings =
-                    { BuyValueMode = ValueMode.Open
-                      SellValueMode = ValueMode.High
+                    { BuyOHLCValue = OHLCValue.Open
+                      SellOHLCValue = OHLCValue.High
                       ActionCombinationMode = ActionCombinationMode.Simple }
                    CurrentPositionHandler = Data.getCurrentPosition store
                    HistoricPositionsHandler = Data.getHistoricPositions store
