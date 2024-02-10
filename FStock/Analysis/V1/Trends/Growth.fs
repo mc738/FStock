@@ -3,7 +3,10 @@
 [<RequireQualifiedAccess>]
 module Growth =
     
-    
+    type [<RequireQualifiedAccess>] GrowthTrend =
+        | Increasing
+        | Decreasing
+        | Stalled
     
     ()
 
