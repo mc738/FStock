@@ -7,6 +7,11 @@ module Growth =
         | Increasing
         | Decreasing
         | Stalled
+        
+    type [<RequireQualifiedAccess>] Velocity =
+        | Accelerating
+        | Decelerating
+        | Stable
     
     ()
 
