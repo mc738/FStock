@@ -1,11 +1,12 @@
 ﻿namespace FStock.Analysis.V1.Tools
 
-open System
-open FStock.Data.Domain
-
 [<RequireQualifiedAccess>]
 module StockGrowthTester =
-    
+
+    open System
+    open FStock.Data
+    open FStock.Data.Domain
+        
     type Parameters =
         {
             BuyOHLCValue: OHLCValue
@@ -30,7 +31,17 @@ module StockGrowthTester =
             | OHLCValue.AdjustedClose -> "ac"
             | OHLCValue.Volume -> "v"
         
-        $"{tableNamePrefix}_{date:ddMMyy}_"
+        let takeProfitPart =
+            match parameters.TakeProfit with
+            | Some tp -> $"tp_{tp}"
+            | None -> "tp_no"
+            
+        let stopLossPart =
+            match parameters.StopLoss with
+            | Some sl -> $"sl_{sl}"
+            | None -> "sl_no"
+        
+        $"{tableNamePrefix}_{date:ddMMyy}_{takeProfitPart}_{stopLossPart}_mp_{}_b_{ohlcPart parameters.BuyOHLCValue}_s_{ohlcPart parameters.SellOHLCValue}"
         
     
     
@@ -38,7 +49,7 @@ module StockGrowthTester =
         
         ()
     
-    let run () =
+    let run (store: Store.FStockStore) =
         
         
         GrowthTester.run
