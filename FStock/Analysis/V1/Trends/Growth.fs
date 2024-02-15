@@ -13,5 +13,15 @@ module Growth =
         | Decelerating
         | Stable
     
+    type TrendItem =
+        {
+            From: decimal
+            To: decimal
+            GrowthTrend: GrowthTrend
+            Velocity: Velocity
+        }
+    
     ()
+    
+    
 
