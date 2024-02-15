@@ -3,7 +3,6 @@
 open System
 open System.Collections.Generic
 open FStock.Analysis.V1.Core
-open FStock.Analysis.V1.Persistence
 open Microsoft.FSharp.Core
 
 [<RequireQualifiedAccess>]
