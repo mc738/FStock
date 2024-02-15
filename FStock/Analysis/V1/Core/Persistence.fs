@@ -5,7 +5,7 @@ open System.Text.Json.Serialization
 open Freql.Core.Common
 open Freql.Sqlite
 
-/// Module generated on 30/01/2024 19:07:38 (utc) via Freql.Tools.
+/// Module generated on 03/02/2024 19:02:09 (utc) via Freql.Tools.
 [<RequireQualifiedAccess>]
 module Records =
     /// A record representing a row in the table `artifacts`.
@@ -182,7 +182,7 @@ module Records =
         static member TableName() = "table_listings"
     
 
-/// Module generated on 30/01/2024 19:07:38 (utc) via Freql.Tools.
+/// Module generated on 03/02/2024 19:02:09 (utc) via Freql.Tools.
 [<RequireQualifiedAccess>]
 module Parameters =
     /// A record representing a new row in the table `artifacts`.
@@ -257,7 +257,7 @@ module Parameters =
               ParametersBlob = BlobField.Empty() }
     
     
-/// Module generated on 30/01/2024 19:07:38 (utc) via Freql.Tools.
+/// Module generated on 03/02/2024 19:02:09 (utc) via Freql.Tools.
 [<RequireQualifiedAccess>]
 module Operations =
 
