@@ -6,13 +6,17 @@ open FSVG.Charts
 open FSVG.Dsl
 open FStock.Analysis
 open FStock.Analysis.V1
+open FStock.Analysis.V1.Store
+open FStock.Analysis.V1.Tools
 open FStock.App
 open FStock.Data
+open FStock.Data.Domain
 open FStock.Data.Persistence
 open FStock.Data.Store
 open FStock.Modeling.V1
 open FStock.Visualizations.Charts
 open Freql.Sqlite
+open Microsoft.FSharp.Core
 
 module DistributionChartTest =
 
@@ -59,7 +63,7 @@ module TestStrategy =
             | Some s -> printfn $"\tValue after {v} days: {s.CloseValue} ({s.CloseValue - item.Stock.CloseValue})"
             | None -> printfn $"\tNo data for +{v} days.")
 
-
+(*
 module NewTest =
 
     let run (ctx: SqliteContext) =
@@ -145,7 +149,8 @@ module NewTest =
 
 
         ()
-
+*)        
+        
 
 let ctx = SqliteContext.Open "E:\\data\\stock_market\\fstock_store.db"
 
@@ -169,6 +174,7 @@ let old _ =
 
     interesting |> List.iter (TestStrategy.run ctx dayReports.Date)
 
+(*
 module Analytics =
 
     open FStock.Analysis.V1
@@ -185,6 +191,7 @@ module Analytics =
         |> build storeCtx
 
     ()
+*)
 
 module Backtester =
 
@@ -192,7 +199,7 @@ module Backtester =
 
     let initialState (startDate: DateTime) =
         ({ Portfolio =
-            { InitialInvestment = 1000m
+            { Capital = 1000m
               Liquidity = 0m
               OpenPositions = []
               ClosedPositions = failwith "todo" }
@@ -225,9 +232,11 @@ module Backtester =
 module Tests =
 
     open FStock.Analysis.V1.TechnicalIndicators
+    open FStock.Analysis.V1.Core
 
+    (*
     let rsi _ =
-        let values: RelativeStrengthIndex.InputItem list =
+        let values: BasicInputItem list =
             [ { Date = DateTime(2024, 1, 1)
                 Price = 54.8m }
               { Date = DateTime(2024, 1, 2)
@@ -315,7 +324,7 @@ module Tests =
         ()
 
     let ema _ =
-        let values: ExponentialMovingAverage.InputItem list =
+        let values: BasicInputItem list =
             [ { Date = DateTime(2024, 1, 1)
                 Price = 42.42m }
               { Date = DateTime(2024, 1, 2)
@@ -358,23 +367,223 @@ module Tests =
                 Price = 44.92m } ]
 
         let parameters =
-            ({ Smoothing = 2m 
-               WindowSize = 12 }
-            : ExponentialMovingAverage.Parameters)
+            ({ Smoothing = 2m; WindowSize = 12 }: ExponentialMovingAverage.Parameters)
 
         let result = ExponentialMovingAverage.calculate parameters values
 
         ()
+*)
+    (*
+    module DeleteMe =
 
-(*
+        type Part<'T> =
+            | And of Part<'T> * Part<'T>
+            | Or of Part<'T> * Part<'T>
+            | Part of 'T
+
+
+            static member (?&&)(a: Part<'T>, b: Part<'T>) = And(a, b)
+
+        type StringQueryPart = { TableName: string }
+
+        type DateTimeQueryPart = { TableName: string }
+
+        [<RequireQualifiedAccess>]
+        type StocksQueryPart =
+            | Foo of StringQueryPart
+            | Bar of DateTimeQueryPart
+
+            member sqp.Build() = "", []
+
+        let buildQuery (parts: Part<StocksQueryPart>) =
+            let rec build (i, p) = ()
+
+            //parts |> List.map (fun i -> i)
+
+
+
+            ()
+
+        let (!&&) a b = Part a, Part b
+
+        let t =
+            Part(StocksQueryPart.Foo { TableName = "" })
+            ?&& Part(StocksQueryPart.Bar { TableName = "" })
+
+        let i =
+            !&& (StocksQueryPart.Foo { TableName = "" }) (StocksQueryPart.Bar { TableName = "" })
+
+        And((StocksQueryPart.Foo { TableName = "" }) !&&(StocksQueryPart.Bar { TableName = "" }))
+        |> buildQuery
+
+
+        ()
+    *)
+
+    let chart _ =
+        let storePath = "E:\\data\\stock_market\\fstock_store.db"
+
+        let start = DateTime(2019, 6, 2)
+
+        use store = FStockStore.Open storePath
+
+        let firstQuery =
+            ({ From = start.AddMonths(-3) |> Some
+               FromInclusive = true
+               To = Some start
+               ToInclusive = true
+               SymbolFilter = Queries.SymbolFilter.EqualTo "AFI" }
+            : Queries.EntryQuery)
+
+        let baseData = store.ExecuteStockQuery(firstQuery)
+
+        let auxData =
+            store.GetPreviousXStockEntries(
+                "AFI",
+                baseData |> List.minBy (fun e -> e.EntryDate) |> (fun e -> e.EntryDate),
+                200
+            )
+
+        Visualizations.Predefined.generate
+            { BaseData = baseData
+              AuxData = auxData }
+        |> fun r -> File.WriteAllText("C:\\ProjectData\\fstock\\test_chart_new.svg", r)
+
+    let buildStore _ =
+        let storePath = "E:\\data\\stock_market\\fstock_store.db"
+
+        let path = "C:\\ProjectData\\fstock\\investigation_06_01_2015\\analytics_store_06_01_2015.db"
+
+        let settings =
+            ({ Sampling = SamplingType.None
+               BuildMode = BuildMode.Overwrite
+               TechnicalIndicators =
+                 [ TechnicalIndicator.Sma("sma_50", { WindowSize = 50 })
+                   TechnicalIndicator.Sma("sma_200", { WindowSize = 200 })
+                   TechnicalIndicator.Macd("macd", MovingAverageConvergenceDivergence.Parameters.Default())
+                   TechnicalIndicator.Rsi("rsi", RelativeStrengthIndex.Parameters.Default()) ] }
+            : BuildSettings)
+
+        let start = DateTime(2015, 1, 6)
+        
+        Store.build settings (FStock.Data.Store.FStockStore.Open storePath) path start
+
+    [<CLIMutable>]
+    type SqliteGrowthTestItem =
+        {
+            Symbol: string
+            BuyPrice: decimal
+            SellPrice: decimal option
+            Difference: decimal option
+            DifferencePercent: decimal option
+            DayLength: int option
+            ConditionName: string option
+            ConditionMessage: string option
+        }
+    
+    let growthTester _ =
+        let storePath = "E:\\data\\stock_market\\fstock_store.db"
+        
+        let store = FStockStore.Open storePath
+        let startDate = DateTime(2018, 01, 2)
+        
+        let resultsDb = SqliteContext.Open("C:\\ProjectData\\fstock\\growth_test_results.db")
+        
+        let tableName = "results_020118_tk_10_sl_no"
+        
+        resultsDb.CreateTable<SqliteGrowthTestItem>(tableName) |> ignore
+        
+        let parameters =
+            
+            let fetch1 (symbol: string) (date: DateTime) =
+                store.GetStockForDate(symbol, date) |> Option.map (fun s -> s.CloseValue)
+            
+            let fetch2 (symbol: string) =
+                store.GetNextXStockEntries(symbol, startDate, 365)
+                |> List.map (fun s -> ({ Date = s.EntryDate; Value = s.CloseValue }: GrowthTester.FetchedGroupItem))
+                 
+            let dbFetch = GrowthTester.FetchType.Individual fetch1
+            
+            let groupFetch = GrowthTester.FetchType.Group fetch2
+                
+            ({ StartDate = startDate.AddDays(1)
+               FetchHandler = groupFetch
+               Condition =
+                 GrowthTester.Condition.Any
+                     [ GrowthTester.Condition.TakeProfit 10m
+                       //GrowthTester.Condition.LossStop 20m
+                       GrowthTester.Condition.FixedPeriod 365 ] }
+            : GrowthTester.Parameters)
+
+
+        let run = GrowthTester.run parameters
+        
+        store.GetAllStockMetaData()
+        |> List.iteri (fun i md ->
+            match store.GetStockForDate(md.Symbol, startDate) with
+            | Some sd ->
+                let r = run sd.Symbol sd.CloseValue
+                match r with
+                | GrowthTester.Finished testResultReport ->
+                    let diff = testResultReport.SellPrice - testResultReport.BuyPrice
+
+                    let percentDiff = ((diff) / testResultReport.BuyPrice) * 100m
+                    
+                    ({ Symbol = testResultReport.Symbol
+                       BuyPrice = testResultReport.BuyPrice
+                       SellPrice = Some testResultReport.SellPrice
+                       Difference = Some diff
+                       DifferencePercent = Some percentDiff
+                       DayLength = Some <| (testResultReport.EndDate - testResultReport.StartDate).Days
+                       ConditionName = Some testResultReport.ConditionName
+                       ConditionMessage = Some testResultReport.ConditionMessage }: SqliteGrowthTestItem)
+                    |> fun i -> resultsDb.Insert(tableName, i)
+                | GrowthTester.NoResult symbol ->
+                    ({ Symbol = symbol
+                       BuyPrice = sd.CloseValue
+                       SellPrice = None
+                       Difference = None
+                       DifferencePercent = None
+                       DayLength = None
+                       ConditionName = None
+                       ConditionMessage = None }: SqliteGrowthTestItem)
+                    |> fun i -> resultsDb.Insert(tableName, i)
+                    
+                printfn $"({i + 1}). {r.Serialize()}"
+            | None ->
+                printfn $"({i + 1}). {md.Symbol} - [no data]")
+
+        ()
+
+    let stockGrowthTester _ =
+        
+        let storePath = "E:\\data\\stock_market\\fstock_store.db"
+        
+        let store = FStockStore.Open storePath
+        
+        let parameters =
+            ({
+            ResultsStorePath = "C:\\ProjectData\\fstock\\stock_growth_testing_results.db"
+            StartDate = DateTime(2015, 01, 06)
+            BuyOHLCValue = OHLCValue.Open
+            SellOHLCValue = OHLCValue.High
+            TakeProfit = Some 10m
+            StopLoss = None
+            MaxPeriods = 365 
+        }: StockGrowthTester.Parameters)
+        
+        StockGrowthTester.run store parameters
+        
+        
+
 module Simulation =
 
     let run _ =
 
         let storeCtx = SqliteContext.Open "E:\\data\\stock_market\\fstock_store.db"
-        let start = DateTime(2019, 01, 02)
+        let start = DateTime(2019, 05, 31)
 
-        match Store.getStockForDate ctx start "GOOG" with
+        match Store.getStockForDate ctx start "VXRT" with
         | Some s ->
             // For now choose open value.
 
@@ -388,12 +597,14 @@ module Simulation =
                 : OpenPosition)
 
             let settings =
-                ({ ValueMode = ValueMode.Close
+                ({ OHLCValue = OHLCValue.Close
                    ActionCombinationMode = ActionCombinationMode.Simple }
                 : SimulationSettings)
 
             let conditions =
-                PositionCondition.Any [ PositionCondition.PercentageGrowth 50m; PositionCondition.PercentageLoss 50m ]
+                PositionCondition.Any
+                    [ PositionCondition.PercentageGrowth(50m, ConditionValueMapper.Value OHLCValue.Close)
+                      PositionCondition.PercentageLoss(50m, ConditionValueMapper.Value OHLCValue.Close) ]
 
             let rec handler (date: DateTime) =
                 if (date.Date < DateTime.UtcNow.Date) then
@@ -406,18 +617,26 @@ module Simulation =
                                High = cs.HighValue
                                Low = cs.CloseValue
                                Close = cs.CloseValue
-                               AdjustedClose = cs.AdjustedCloseValue }
+                               AdjustedClose = cs.AdjustedCloseValue
+                               Volume = cs.VolumeValue }
                             : CurrentPosition)
 
                         let v =
-                            match settings.ValueMode with
-                            | ValueMode.Open -> cp.Open
-                            | ValueMode.Close -> cp.Close
-                            | ValueMode.High -> cp.High
-                            | ValueMode.Low -> cp.Low
-                            | ValueMode.AdjustedClose -> cp.AdjustedClose
+                            match settings.OHLCValue with
+                            | OHLCValue.Open -> cp.Open
+                            | OHLCValue.Close -> cp.Close
+                            | OHLCValue.High -> cp.High
+                            | OHLCValue.Low -> cp.Low
+                            | OHLCValue.AdjustedClose -> cp.AdjustedClose
+                            | OHLCValue.Volume -> cp.Volume
 
-                        if conditions.Test(positionStart, cp, settings) then
+                        let profitTakeTest _ =
+                            ((positionStart.BuyPrice / 100m) * 5m) + positionStart.BuyPrice < cp.Close
+
+                        let stopLossTest _ =
+                            positionStart.BuyPrice - ((positionStart.BuyPrice / 100m) * 20m) > cp.Close
+
+                        if profitTakeTest () || stopLossTest () then
                             let diff = v - positionStart.BuyPrice
 
                             let percentDiff = ((v - positionStart.BuyPrice) / positionStart.BuyPrice) * 100m
@@ -443,15 +662,26 @@ module Simulation =
             printfn "Not found."
 
         ()
-*)
+
+
+
+//let _ = Tests.buildStore ()
+
+let _ = Tests.stockGrowthTester ()
+
+let _ = Tests.growthTester ()
+
+let _ = Simulation.run ()
+
+let _ = Tests.chart ()
 
 //Simulation.run ()
-let r11 = Tests.ema ()
+//let r11 = Tests.ema ()
 
-let r1 = Tests.rsi ()
-let r = Analytics.build ()
+//let r1 = Tests.rsi ()
+//let r = Analytics.build ()
 
-NewTest.run ctx
+//NewTest.run ctx
 
 
 
