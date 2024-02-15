@@ -1,7 +1,6 @@
 ﻿namespace FStock.Analysis.V1.Visualizations.Charts
 
 open FStock.Analysis.V1.Core
-open FStock.Analysis.V1.Persistence
 open FStock.Analysis.V1.TechnicalIndicators
 
 [<RequireQualifiedAccess>]
