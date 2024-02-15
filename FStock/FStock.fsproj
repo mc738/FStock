@@ -8,23 +8,18 @@
     <ItemGroup>
         <Compile Include="Library.fs" />
         <Compile Include="Data\Persistence.fs" />
+        <Compile Include="Data\Domain.fs" />
         <Compile Include="Data\Import.fs" />
         <Compile Include="Data\Store.fs" />
         <Compile Include="Visualizations\Charts.fs" />
-        <Compile Include="Analysis\V1\Persistence.fs" />
-        <Compile Include="Analysis\V1\Common.fs" />
-        <Compile Include="Analysis\V1\MovingAverages.fs" />
-        <Compile Include="Analysis\V1\Stability.fs" />
-        <Compile Include="Analysis\V1\Trends.fs" />
-        <Compile Include="Analysis\V1\History.fs" />
-        <Compile Include="Analysis\V1\Rules.fs" />
-        <Compile Include="Analysis\V1\Impl.fs" />
         <Compile Include="Analysis\V1\Core\Persistence.fs" />
         <Compile Include="Analysis\V1\Core\Common.fs" />
         <Compile Include="Analysis\V1\TechnicalIndicators\SimpleMovingAverage.fs" />
         <Compile Include="Analysis\V1\TechnicalIndicators\ExponentialMovingAverage.fs" />
         <Compile Include="Analysis\V1\TechnicalIndicators\RelativeStrengthIndex.fs" />
         <Compile Include="Analysis\V1\TechnicalIndicators\MovingAverageConvergenceDivergence.fs" />
+        <Compile Include="Analysis\V1\TechnicalIndicators\StochasticOscillator.fs" />
+        <Compile Include="Analysis\V1\Trends\Growth.fs" />
         <Compile Include="Analysis\V1\Visualizations\Core\Common.fs" />
         <Compile Include="Analysis\V1\Visualizations\Charts\Common.fs" />
         <Compile Include="Analysis\V1\Visualizations\Charts\PriceChart.fs" />
@@ -33,7 +28,9 @@
         <Compile Include="Analysis\V1\Visualizations\Charts\RsiChart.fs" />
         <Compile Include="Analysis\V1\Visualizations\Predefined.fs" />
         <Compile Include="Analysis\V1\Tools\GrowthTester.fs" />
+        <Compile Include="Analysis\V1\Tools\StockGrowthTester.fs" />
         <Compile Include="Analysis\V1\Store.fs" />
+        
         <Compile Include="Modeling\V1\Common.fs" />
         <Compile Include="Modeling\V1\Data.fs" />
         <Compile Include="Modeling\V1\Conditions.fs" />
@@ -42,10 +39,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Freql\Freql.Csv\Freql.Csv.fsproj" />
-      <ProjectReference Include="..\..\Freql\Freql.Sqlite\Freql.Sqlite.fsproj" />
-      <ProjectReference Include="..\..\FSVG\FSVG.Charts\FSVG.Charts.fsproj" />
-      <ProjectReference Include="..\..\FSVG\FSVG\FSVG.fsproj" />
+        <ProjectReference Include="..\..\Freql\Freql.Csv\Freql.Csv.fsproj" />
+        <ProjectReference Include="..\..\Freql\Freql.Sqlite\Freql.Sqlite.fsproj" />
+        <ProjectReference Include="..\..\FSVG\FSVG.Charts\FSVG.Charts.fsproj" />
+        <ProjectReference Include="..\..\FSVG\FSVG\FSVG.fsproj" />
     </ItemGroup>
 
 </Project>
