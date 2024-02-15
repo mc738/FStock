@@ -16,6 +16,16 @@ module Domain =
         | AdjustedClose
         | Volume
         
+        member v.Serialize() =
+            match v with
+            | OHLCValue.Open -> "open"
+            | OHLCValue.High -> "high"
+            | OHLCValue.Low -> "low"
+            | OHLCValue.Close -> "close"
+            | OHLCValue.AdjustedClose -> "adj_close"
+            | OHLCValue.Volume -> "volume"
+        
+        
         
     [<AutoOpen>]    
     module Extensions =
