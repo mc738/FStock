@@ -20,8 +20,14 @@ module Growth =
             GrowthTrend: GrowthTrend
             Velocity: Velocity
         }
-    
-    ()
+        
+    let createTrendItems (values: decimal list) =
+        values
+        |> List.pairwise
+        |> List.map (fun (f, t) ->
+            
+            ())
+        
     
     
 
