@@ -684,11 +684,6 @@ let _ = Tests.chart ()
 //NewTest.run ctx
 
 
-
-// Stable -
-// 50 day high and low diff -
-// 200 day high and low diff -
-
 //Import.build Import.logToConsole "E:\\data\\stock_market"
 
 // For more information see https://aka.ms/fsharp-console-apps
