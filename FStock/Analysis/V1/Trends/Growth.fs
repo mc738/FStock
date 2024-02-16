@@ -26,11 +26,10 @@ module Growth =
         |> List.pairwise
         |> List.map (fun (f, t) ->
             let gt =
-                
+                if f > t then GrowthTrend.Decreasing
+                else if f < t then GrowthTrend.Increasing
+                else GrowthTrend.Stalled
 
-            
-            
-            
             
             
             ())
