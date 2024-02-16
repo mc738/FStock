@@ -25,6 +25,13 @@ module Growth =
         values
         |> List.pairwise
         |> List.map (fun (f, t) ->
+            let gt =
+                
+
+            
+            
+            
+            
             
             ())
         
