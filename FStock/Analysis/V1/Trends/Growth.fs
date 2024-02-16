@@ -31,6 +31,8 @@ module Growth =
                     else if f < t then GrowthTrend.Increasing
                     else GrowthTrend.Stalled
 
+                let prev = acc |> List.tryHead
+                
                 { From = f
                   To = t
                   GrowthTrend = gt
