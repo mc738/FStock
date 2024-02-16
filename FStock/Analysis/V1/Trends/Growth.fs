@@ -32,7 +32,9 @@ module Growth =
                     else GrowthTrend.Stalled
 
                 let prev = acc |> List.tryHead
-                
+                    
+                    
+                    
                 { From = f
                   To = t
                   GrowthTrend = gt
