@@ -24,13 +24,16 @@ module Growth =
     let createTrendItems (values: decimal list) =
         values
         |> List.pairwise
-        |> List.fold (fun (acc, (f, t)) ->
-            let gt =
-                if f > t then GrowthTrend.Decreasing
-                else if f < t then GrowthTrend.Increasing
-                else GrowthTrend.Stalled
+        |> List.fold
+            (fun acc (f, t) ->
+                let gt =
+                    if f > t then GrowthTrend.Decreasing
+                    else if f < t then GrowthTrend.Increasing
+                    else GrowthTrend.Stalled
 
-            { From = f
-              To = t
-              GrowthTrend = gt
-              Velocity = Velocity.Stable })
+                { From = f
+                  To = t
+                  GrowthTrend = gt
+                  Velocity = Velocity.Stable }
+                :: acc)
+            []
