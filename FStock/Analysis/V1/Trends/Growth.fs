@@ -2,38 +2,35 @@
 
 [<RequireQualifiedAccess>]
 module Growth =
-    
-    type [<RequireQualifiedAccess>] GrowthTrend =
+
+    [<RequireQualifiedAccess>]
+    type GrowthTrend =
         | Increasing
         | Decreasing
         | Stalled
-        
-    type [<RequireQualifiedAccess>] Velocity =
+
+    [<RequireQualifiedAccess>]
+    type Velocity =
         | Accelerating
         | Decelerating
         | Stable
-    
+
     type TrendItem =
-        {
-            From: decimal
-            To: decimal
-            GrowthTrend: GrowthTrend
-            Velocity: Velocity
-        }
-        
+        { From: decimal
+          To: decimal
+          GrowthTrend: GrowthTrend
+          Velocity: Velocity }
+
     let createTrendItems (values: decimal list) =
         values
         |> List.pairwise
-        |> List.map (fun (f, t) ->
+        |> List.fold (fun (acc, (f, t)) ->
             let gt =
                 if f > t then GrowthTrend.Decreasing
                 else if f < t then GrowthTrend.Increasing
                 else GrowthTrend.Stalled
 
-            
-            
-            ())
-        
-    
-    
-
+            { From = f
+              To = t
+              GrowthTrend = gt
+              Velocity = Velocity.Stable })
