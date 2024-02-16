@@ -37,3 +37,4 @@ module Growth =
                   Velocity = Velocity.Stable }
                 :: acc)
             []
+        |> List.rev
