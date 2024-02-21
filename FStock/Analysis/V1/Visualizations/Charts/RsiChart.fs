@@ -9,7 +9,7 @@ module RsiChart =
 
     open FSVG
 
-    type Parameters =
+    type ChartSettings =
         { MinimumX: float
           MaximumX: float
           MinimumY: float
@@ -18,21 +18,24 @@ module RsiChart =
           RightYAxis: bool
           XAxisStartOverride: float option
           XAxisEndOverride: float option
-          AxisStyle: Style
+          AxisStyle: Style }
+
+    type StockDataParameters =
+        { ChartSettings: ChartSettings
           Data: StockData }
 
-    let createRsiLine (parameters: Parameters) (data: RelativeStrengthIndex.RsiItem list) =
+    let createRsiLine (settings: ChartSettings) (data: RelativeStrengthIndex.RsiItem list) =
 
         let sectionWidth =
-            (parameters.MaximumX - parameters.MinimumX)
+            (settings.MaximumX - settings.MinimumX)
             / float parameters.Data.BaseData.Length
 
         Path
             { Commands =
                 data
                 |> List.mapi (fun i d ->
-                    ({ X = parameters.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
-                       Y = normalizeYValue d.Rsi 0m 100m parameters.MinimumY parameters.MaximumY true }
+                    ({ X = settings.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
+                       Y = normalizeYValue d.Rsi 0m 100m settings.MinimumY settings.MaximumY true }
                     : SvgPoint))
                 |> SvgPoints.Create
                 |> Helpers.createStraightCommands
@@ -46,12 +49,16 @@ module RsiChart =
 
     let create (parameters: Parameters) =
         let rsiData =
-            parameters.Data.All ()
-            |> List.map (fun d -> ({ Symbol = ""; Date = d.EntryDate; Price = d.CloseValue }: BasicInputItem))
+            parameters.Data.All()
+            |> List.map (fun d ->
+                ({ Symbol = ""
+                   Date = d.EntryDate
+                   Price = d.CloseValue }
+                : BasicInputItem))
             |> RelativeStrengthIndex.generate (RelativeStrengthIndex.Parameters.Default())
             |> List.take parameters.Data.BaseData.Length
             |> List.rev
-        
+
         [ Line
               { X1 = parameters.MinimumX
                 X2 = parameters.MinimumX
@@ -112,5 +119,5 @@ module RsiChart =
                     StrokeDashArray = None
                     Opacity = Some 0.2
                     GenericValues = Map.empty } }
-              
+
           createRsiLine parameters rsiData ]
