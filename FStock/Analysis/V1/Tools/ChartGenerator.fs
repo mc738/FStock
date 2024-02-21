@@ -1,2 +1,14 @@
-﻿module FStock.Analysis.V1.Tools.ChartGenerator
+﻿namespace FStock.Analysis.V1.Tools
+
+module ChartGenerator =
+    
+    type ChartType =
+        | Price
+        | Volume
+        | Macd
+        | Rsi
+        
+     
+    
+    ()
 
