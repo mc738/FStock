@@ -1,13 +1,12 @@
 ﻿namespace FStock.Analysis.V1.Visualizations.Charts
 
-open FStock.Analysis.V1.Core
-open FStock.Analysis.V1.TechnicalIndicators
-
 [<RequireQualifiedAccess>]
 module MacdChart =
 
     open FSVG
-
+    open FStock.Analysis.V1.Core
+    open FStock.Analysis.V1.TechnicalIndicators
+    
     type ChartSettings =
         { MinimumX: float
           MaximumX: float
@@ -19,10 +18,10 @@ module MacdChart =
           XAxisEndOverride: float option
           AxisStyle: Style }
 
-    type Parameters =
+    type StockDataParameters =
         { ChartSettings: ChartSettings
           Data: StockData }
-
+    
     let createHistograms
         (settings: ChartSettings)
         (minValue: decimal)
@@ -130,11 +129,12 @@ module MacdChart =
                   { basicStyle with
                       Stroke = Some "orange" } } ]
 
-    let createFromStocks (settings: ChartSettings) (stocks: StockData) =
-        let itemCount = stocks.BaseData.Length
+    let createFromStockData (parameters: StockDataParameters) =
+        let itemCount = parameters.Data.BaseData.Length
+        let settings = parameters.ChartSettings
         
         let data =
-            stocks.All()
+            parameters.Data.All()
             |> List.map (fun d ->
                 ({ Symbol = ""
                    Date = d.EntryDate
@@ -189,7 +189,7 @@ module MacdChart =
                 Y2 = settings.MaximumY
                 Style = settings.AxisStyle }
 
-          yield! createHistograms settings minValue maxValue data
+          yield! createHistograms settings minValue maxValue itemCount data
 
           Line
               { X1 = settings.MinimumX
@@ -201,4 +201,4 @@ module MacdChart =
                       StrokeDashArray = Some [ 2; 2 ]
                       StrokeWidth = Some 0.5
                       GenericValues = [ "stroke-dashoffset", "1" ] |> Map.ofList } }
-          yield! createMcadLine settings minValue maxValue data ]
+          yield! createMcadLine settings minValue maxValue itemCount data ]
