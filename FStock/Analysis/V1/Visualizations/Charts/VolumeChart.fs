@@ -7,6 +7,11 @@ module VolumeChart =
 
     open FSVG
 
+    type ChartItem =
+        {
+            VolumeValue: decimal
+        }
+    
     type Parameters =
         { MinimumX: float
           MaximumX: float
@@ -18,7 +23,6 @@ module VolumeChart =
           XAxisEndOverride: float option
           AxisStyle: Style
           Data: StockData }
-
 
     let createBars (parameters: Parameters) =
         let data = parameters.Data.BaseData |> List.map (fun d -> d.VolumeValue)
