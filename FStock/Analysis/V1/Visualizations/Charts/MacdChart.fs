@@ -1,12 +1,14 @@
 ﻿namespace FStock.Analysis.V1.Visualizations.Charts
 
+open FStock.Analysis.V1.TechnicalIndicators
+
 [<RequireQualifiedAccess>]
 module MacdChart =
 
     open FSVG
     open FStock.Analysis.V1.Core
     open FStock.Analysis.V1.TechnicalIndicators
-    
+
     type ChartSettings =
         { MinimumX: float
           MaximumX: float
@@ -21,7 +23,7 @@ module MacdChart =
     type StockDataParameters =
         { ChartSettings: ChartSettings
           Data: StockData }
-    
+
     let createHistograms
         (settings: ChartSettings)
         (minValue: decimal)
@@ -32,9 +34,7 @@ module MacdChart =
 
         let sectionPadding = 0.5
 
-        let sectionWidth =
-            (settings.MaximumX - settings.MinimumX)
-            / float itemCount
+        let sectionWidth = (settings.MaximumX - settings.MinimumX) / float itemCount
 
         let barWidth = sectionWidth - (sectionPadding * 2.)
 
@@ -97,9 +97,7 @@ module MacdChart =
         (itemCount: int)
         (data: MovingAverageConvergenceDivergence.MacdItem list)
         =
-        let sectionWidth =
-            (settings.MaximumX - settings.MinimumX)
-            / float itemCount
+        let sectionWidth = (settings.MaximumX - settings.MinimumX) / float itemCount
 
         let (macdPoints, signalPoints) =
             data
@@ -129,20 +127,8 @@ module MacdChart =
                   { basicStyle with
                       Stroke = Some "orange" } } ]
 
-    let createFromStockData (parameters: StockDataParameters) =
-        let itemCount = parameters.Data.BaseData.Length
-        let settings = parameters.ChartSettings
-        
-        let data =
-            parameters.Data.All()
-            |> List.map (fun d ->
-                ({ Symbol = ""
-                   Date = d.EntryDate
-                   Price = d.CloseValue }
-                : BasicInputItem))
-            |> MovingAverageConvergenceDivergence.generate (MovingAverageConvergenceDivergence.Parameters.Default())
-            |> List.take itemCount
-            |> List.rev
+    let create (settings: ChartSettings) (data: MovingAverageConvergenceDivergence.MacdItem list) =
+        let itemCount = data.Length
 
         let maxItem =
             data
@@ -202,3 +188,19 @@ module MacdChart =
                       StrokeWidth = Some 0.5
                       GenericValues = [ "stroke-dashoffset", "1" ] |> Map.ofList } }
           yield! createMcadLine settings minValue maxValue itemCount data ]
+
+    let createFromStockData (parameters: StockDataParameters) =
+        let settings = parameters.ChartSettings
+
+        let data =
+            parameters.Data.All()
+            |> List.map (fun d ->
+                ({ Symbol = ""
+                   Date = d.EntryDate
+                   Price = d.CloseValue }
+                : BasicInputItem))
+            |> MovingAverageConvergenceDivergence.generate (MovingAverageConvergenceDivergence.Parameters.Default())
+            |> List.take parameters.Data.BaseData.Length
+            |> List.rev
+
+        create settings data
