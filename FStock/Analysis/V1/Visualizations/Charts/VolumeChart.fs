@@ -56,7 +56,6 @@ module VolumeChart =
                 true
                 barStyle)
 
-
     let create (settings: ChartSettings) (data: decimal list) =
         [ Line
               { X1 = settings.MinimumX

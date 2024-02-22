@@ -115,18 +115,19 @@ module Predefined =
     let generateVolumeChart (settings: Settings) (stockData: StockData) =
         let topOffset = settings.TopPadding + settings.PriceChartHeight
 
-        ({ MinimumX = settings.LeftPadding
-           MaximumX = settings.LeftPadding + settings.Width
-           MinimumY = topOffset
-           MaximumY = topOffset + settings.VolumeHeight
-           LeftYAxis = true
-           RightYAxis = true
-           XAxisStartOverride = Some(settings.LeftPadding / 2.)
-           XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
-           AxisStyle = axisStyle
+        ({ ChartSettings =
+            { MinimumX = settings.LeftPadding
+              MaximumX = settings.LeftPadding + settings.Width
+              MinimumY = topOffset
+              MaximumY = topOffset + settings.VolumeHeight
+              LeftYAxis = true
+              RightYAxis = true
+              XAxisStartOverride = Some(settings.LeftPadding / 2.)
+              XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
+              AxisStyle = axisStyle }
            Data = stockData }
-        : VolumeChart.Parameters)
-        |> VolumeChart.create
+        : VolumeChart.StockDataParameters)
+        |> VolumeChart.createFromStockData
 
     let generateMacdChart (settings: Settings) (stockData: StockData) =
         let topOffset =
