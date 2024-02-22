@@ -147,29 +147,6 @@ module Predefined =
         : MacdChart.StockDataParameters)
         |> MacdChart.createFromStockData
 
-
-    (*
-        [ // First create the axis
-          Line
-              { X1 = settings.LeftPadding
-                X2 = settings.LeftPadding
-                Y1 = topOffset
-                Y2 = topOffset + settings.MacdHeight
-                Style = axisStyle }
-          Line
-              { X1 = settings.LeftPadding + settings.Width
-                X2 = settings.LeftPadding + settings.Width
-                Y1 = topOffset
-                Y2 = topOffset + settings.MacdHeight
-                Style = axisStyle }
-          Line
-              { X1 = (settings.LeftPadding / 2.)
-                X2 = settings.LeftPadding + settings.Width + (settings.RightPadding / 2.)
-                Y1 = topOffset + settings.MacdHeight
-                Y2 = topOffset + settings.MacdHeight
-                Style = axisStyle } ]
-          *)
-
     let generateRsiChart (settings: Settings) (stockData: StockData) =
         let topOffset =
             settings.TopPadding
