@@ -7,12 +7,9 @@ module VolumeChart =
 
     open FSVG
 
-    type ChartItem =
-        {
-            VolumeValue: decimal
-        }
-    
-    type Parameters =
+    type ChartItem = { VolumeValue: decimal }
+
+    type ChartSettings =
         { MinimumX: float
           MaximumX: float
           MinimumY: float
@@ -21,11 +18,14 @@ module VolumeChart =
           RightYAxis: bool
           XAxisStartOverride: float option
           XAxisEndOverride: float option
-          AxisStyle: Style
+          AxisStyle: Style }
+
+    type StockDataParameters =
+        { ChartSettings: ChartSettings
           Data: StockData }
 
-    let createBars (parameters: Parameters) =
-        let data = parameters.Data.BaseData |> List.map (fun d -> d.VolumeValue)
+    let createBars (settings: ChartSettings) (data: decimal list) =
+        //let data = parameters.Data.BaseData |> List.map (fun d -> d.VolumeValue)
 
         let maxValue = data |> List.max
         let minValue = 0m
@@ -33,8 +33,8 @@ module VolumeChart =
         let sectionPadding = 0.5
 
         let sectionWidth =
-            (parameters.MaximumX - parameters.MinimumX)
-            / float parameters.Data.BaseData.Length
+            (settings.MaximumX - settings.MinimumX)
+            / float data.Length
 
         let barWidth = sectionWidth - (sectionPadding * 2.)
 
@@ -49,32 +49,35 @@ module VolumeChart =
                 d
                 minValue
                 maxValue
-                parameters.MinimumY
-                parameters.MaximumY
-                (parameters.MinimumX + (sectionWidth * float i) + sectionPadding)
+                settings.MinimumY
+                settings.MaximumY
+                (settings.MinimumX + (sectionWidth * float i) + sectionPadding)
                 barWidth
                 true
                 barStyle)
 
 
-    let create (parameters: Parameters) =
+    let create (settings: ChartSettings) (data: decimal list) =
         [ Line
-              { X1 = parameters.MinimumX
-                X2 = parameters.MinimumX
-                Y1 = parameters.MinimumY
-                Y2 = parameters.MaximumY
-                Style = parameters.AxisStyle }
+              { X1 = settings.MinimumX
+                X2 = settings.MinimumX
+                Y1 = settings.MinimumY
+                Y2 = settings.MaximumY
+                Style = settings.AxisStyle }
           Line
-              { X1 = parameters.MaximumX
-                X2 = parameters.MaximumX
-                Y1 = parameters.MinimumY
-                Y2 = parameters.MaximumY
-                Style = parameters.AxisStyle }
+              { X1 = settings.MaximumX
+                X2 = settings.MaximumX
+                Y1 = settings.MinimumY
+                Y2 = settings.MaximumY
+                Style = settings.AxisStyle }
           Line
-              { X1 = parameters.XAxisStartOverride |> Option.defaultValue parameters.MinimumX
-                X2 = parameters.XAxisEndOverride |> Option.defaultValue parameters.MaximumX
-                Y1 = parameters.MaximumY
-                Y2 = parameters.MaximumY
-                Style = parameters.AxisStyle }
+              { X1 = settings.XAxisStartOverride |> Option.defaultValue settings.MinimumX
+                X2 = settings.XAxisEndOverride |> Option.defaultValue settings.MaximumX
+                Y1 = settings.MaximumY
+                Y2 = settings.MaximumY
+                Style = settings.AxisStyle }
 
-          yield! createBars parameters ]
+          yield! createBars settings data ]
+        
+    let createFromStockData  (parameters: StockDataParameters) =
+        ()
