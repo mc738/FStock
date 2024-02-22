@@ -79,5 +79,7 @@ module VolumeChart =
 
           yield! createBars settings data ]
         
-    let createFromStockData  (parameters: StockDataParameters) =
-        ()
+    let createFromStockData (parameters: StockDataParameters) =
+        let data = parameters.Data.BaseData |> List.map (fun d -> d.VolumeValue)
+        
+        create parameters.ChartSettings data
