@@ -176,18 +176,19 @@ module Predefined =
             + settings.VolumeHeight
             + settings.RsiHeight
 
-        ({ MinimumX = settings.LeftPadding
-           MaximumX = settings.LeftPadding + settings.Width
-           MinimumY = topOffset
-           MaximumY = topOffset + settings.RsiHeight
-           LeftYAxis = true
-           RightYAxis = true
-           XAxisStartOverride = Some(settings.LeftPadding / 2.)
-           XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
-           AxisStyle = axisStyle
+        ({ ChartSettings =
+            { MinimumX = settings.LeftPadding
+              MaximumX = settings.LeftPadding + settings.Width
+              MinimumY = topOffset
+              MaximumY = topOffset + settings.RsiHeight
+              LeftYAxis = true
+              RightYAxis = true
+              XAxisStartOverride = Some(settings.LeftPadding / 2.)
+              XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
+              AxisStyle = axisStyle }
            Data = stockData }
-        : RsiChart.Parameters)
-        |> RsiChart.create
+        : RsiChart.StockDataParameters)
+        |> RsiChart.createFromStockData
 
     (*
         [ // First create the axis
