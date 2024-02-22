@@ -5,7 +5,7 @@ open System.Text.Json.Serialization
 open Freql.Core.Common
 open Freql.Sqlite
 
-/// Module generated on 03/02/2024 19:02:09 (utc) via Freql.Tools.
+/// Module generated on 22/02/2024 21:50:35 (utc) via Freql.Tools.
 [<RequireQualifiedAccess>]
 module Records =
     /// A record representing a row in the table `artifacts`.
@@ -152,7 +152,7 @@ module Records =
         static member TableName() = "stocks"
     
     /// A record representing a row in the table `table_listings`.
-    type TableListingTime =
+    type TableListingItem =
         { [<JsonPropertyName("name")>] Name: string
           [<JsonPropertyName("tableType")>] TableType: string
           [<JsonPropertyName("parametersBlob")>] ParametersBlob: BlobField }
@@ -182,7 +182,7 @@ module Records =
         static member TableName() = "table_listings"
     
 
-/// Module generated on 03/02/2024 19:02:09 (utc) via Freql.Tools.
+/// Module generated on 22/02/2024 21:50:35 (utc) via Freql.Tools.
 [<RequireQualifiedAccess>]
 module Parameters =
     /// A record representing a new row in the table `artifacts`.
@@ -246,7 +246,7 @@ module Parameters =
     
     
     /// A record representing a new row in the table `table_listings`.
-    type NewTableListingTime =
+    type NewTableListingItem =
         { [<JsonPropertyName("name")>] Name: string
           [<JsonPropertyName("tableType")>] TableType: string
           [<JsonPropertyName("parametersBlob")>] ParametersBlob: BlobField }
@@ -257,7 +257,7 @@ module Parameters =
               ParametersBlob = BlobField.Empty() }
     
     
-/// Module generated on 03/02/2024 19:02:09 (utc) via Freql.Tools.
+/// Module generated on 22/02/2024 21:50:35 (utc) via Freql.Tools.
 [<RequireQualifiedAccess>]
 module Operations =
 
@@ -359,27 +359,27 @@ module Operations =
     let insertStock (context: SqliteContext) (parameters: Parameters.NewStock) =
         context.Insert("stocks", parameters)
     
-    /// Select a `Records.TableListingTime` from the table `table_listings`.
-    /// Internally this calls `context.SelectSingleAnon<Records.TableListingTime>` and uses Records.TableListingTime.SelectSql().
+    /// Select a `Records.TableListingItem` from the table `table_listings`.
+    /// Internally this calls `context.SelectSingleAnon<Records.TableListingItem>` and uses Records.TableListingItem.SelectSql().
     /// The caller can provide extra string lines to create a query and boxed parameters.
     /// It is up to the caller to verify the sql and parameters are correct,
     /// this should be considered an internal function (not exposed in public APIs).
     /// Parameters are assigned names based on their order in 0 indexed array. For example: @0,@1,@2...
-    /// Example: selectTableListingTimeRecord ctx "WHERE `field` = @0" [ box `value` ]
-    let selectTableListingTimeRecord (context: SqliteContext) (query: string list) (parameters: obj list) =
-        let sql = [ Records.TableListingTime.SelectSql() ] @ query |> buildSql
-        context.SelectSingleAnon<Records.TableListingTime>(sql, parameters)
+    /// Example: selectTableListingItemRecord ctx "WHERE `field` = @0" [ box `value` ]
+    let selectTableListingItemRecord (context: SqliteContext) (query: string list) (parameters: obj list) =
+        let sql = [ Records.TableListingItem.SelectSql() ] @ query |> buildSql
+        context.SelectSingleAnon<Records.TableListingItem>(sql, parameters)
     
-    /// Internally this calls `context.SelectAnon<Records.TableListingTime>` and uses Records.TableListingTime.SelectSql().
+    /// Internally this calls `context.SelectAnon<Records.TableListingItem>` and uses Records.TableListingItem.SelectSql().
     /// The caller can provide extra string lines to create a query and boxed parameters.
     /// It is up to the caller to verify the sql and parameters are correct,
     /// this should be considered an internal function (not exposed in public APIs).
     /// Parameters are assigned names based on their order in 0 indexed array. For example: @0,@1,@2...
-    /// Example: selectTableListingTimeRecords ctx "WHERE `field` = @0" [ box `value` ]
-    let selectTableListingTimeRecords (context: SqliteContext) (query: string list) (parameters: obj list) =
-        let sql = [ Records.TableListingTime.SelectSql() ] @ query |> buildSql
-        context.SelectAnon<Records.TableListingTime>(sql, parameters)
+    /// Example: selectTableListingItemRecords ctx "WHERE `field` = @0" [ box `value` ]
+    let selectTableListingItemRecords (context: SqliteContext) (query: string list) (parameters: obj list) =
+        let sql = [ Records.TableListingItem.SelectSql() ] @ query |> buildSql
+        context.SelectAnon<Records.TableListingItem>(sql, parameters)
     
-    let insertTableListingTime (context: SqliteContext) (parameters: Parameters.NewTableListingTime) =
+    let insertTableListingItem (context: SqliteContext) (parameters: Parameters.NewTableListingItem) =
         context.Insert("table_listings", parameters)
     
