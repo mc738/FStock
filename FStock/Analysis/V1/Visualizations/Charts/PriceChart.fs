@@ -126,7 +126,7 @@ module PriceChart =
 
         let sectionWidth =
             (settings.MaximumX - settings.MinimumX)
-            / float parameters.Data.BaseData.Length
+            / float itemCount
 
         let barWidth = sectionWidth - (sectionPadding * 2.)
 
