@@ -16,6 +16,8 @@ module PriceChart =
             StrokeWidth = Some 0.1
             Fill = Some "green" }
 
+    type Chart
+    
     type Parameters =
         { MinimumX: float
           MaximumX: float
@@ -210,7 +212,7 @@ module PriceChart =
                       StrokeDashArray = Some [ 1; 1 ]
                       GenericValues = [ "stroke-dashoffset", "1" ] |> Map.ofList } } ]
 
-    let create (parameters: Parameters) =
+    let createFromStockData (parameters: Parameters) =
 
         let baseMaxValue =
             parameters.Data.BaseData
