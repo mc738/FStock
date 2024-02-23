@@ -16,9 +16,7 @@ module PriceChart =
             StrokeWidth = Some 0.1
             Fill = Some "green" }
 
-    type Chart
-    
-    type Parameters =
+    type ChartSettings =
         { MinimumX: float
           MaximumX: float
           MinimumY: float
@@ -27,7 +25,10 @@ module PriceChart =
           RightYAxis: bool
           XAxisStartOverride: float option
           XAxisEndOverride: float option
-          AxisStyle: Style
+          AxisStyle: Style }
+
+    type Parameters =
+        { ChartSettings: ChartSettings
           Data: StockData }
 
     let createLabels (parameters: Parameters) (minValue: decimal) (maxValue: decimal) =
