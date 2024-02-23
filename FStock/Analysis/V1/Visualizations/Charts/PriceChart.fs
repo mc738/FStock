@@ -77,24 +77,25 @@ module PriceChart =
               ])
 
     let createMovingAverageLines
-        (parameters: Parameters)
+        (settings: ChartSettings)
         (minValue: decimal)
         (maxValue: decimal)
+        (itemCount: int)
         (ma50: SimpleMovingAverage.SmaItem list)
         (ma200: SimpleMovingAverage.SmaItem list)
         =
 
         let sectionWidth =
-            (parameters.MaximumX - parameters.MinimumX)
-            / float parameters.Data.BaseData.Length
+            (settings.MaximumX - settings.MinimumX)
+            / float itemCount
 
 
         [ Path
               { Commands =
                   ma50
                   |> List.mapi (fun i d ->
-                      ({ X = parameters.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
-                         Y = normalizeYValue d.Sma minValue maxValue parameters.MinimumY parameters.MaximumY true }
+                      ({ X = settings.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
+                         Y = normalizeYValue d.Sma minValue maxValue settings.MinimumY settings.MaximumY true }
                       : SvgPoint))
                   |> SvgPoints.Create
                   |> Helpers.createBezierCommands
@@ -108,8 +109,8 @@ module PriceChart =
               { Commands =
                   ma200
                   |> List.mapi (fun i d ->
-                      ({ X = parameters.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
-                         Y = normalizeYValue d.Sma minValue maxValue parameters.MinimumY parameters.MaximumY true }
+                      ({ X = settings.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
+                         Y = normalizeYValue d.Sma minValue maxValue settings.MinimumY settings.MaximumY true }
                       : SvgPoint))
                   |> SvgPoints.Create
                   |> Helpers.createBezierCommands
@@ -119,7 +120,7 @@ module PriceChart =
                       StrokeWidth = Some 0.1
                       Stroke = Some "orange" } } ]
 
-    let createCandleSticks (parameters: Parameters) (minValue: decimal) (maxValue: decimal) =
+    let createCandleSticks (settings: ChartSettings) (minValue: decimal) (maxValue: decimal) =
 
         let sectionPadding = 0.5
 
