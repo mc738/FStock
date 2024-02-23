@@ -153,15 +153,15 @@ module PriceChart =
                 | ValueComparisonResult.Equal ->
                     normalizeValue v.CloseValue, normalizeValue v.OpenValue, SvgColor.Named "green"
 
-            let height = ((parameters.MaximumY - parameters.MinimumY) / 100.) * (top - bottom)
+            let height = ((settings.MaximumY - settings.MinimumY) / 100.) * (top - bottom)
 
             [ ({ Height = height
                  Width = barWidth
-                 X = parameters.MinimumX + sectionPadding + (float i * sectionWidth)
+                 X = settings.MinimumX + sectionPadding + (float i * sectionWidth)
                  Y =
-                   parameters.MinimumY
+                   settings.MinimumY
                    + (((100. - bottom - (top - bottom)) / 100.)
-                      * (parameters.MaximumY - parameters.MinimumY))
+                      * (settings.MaximumY - settings.MinimumY))
                  RX = 0.
                  RY = 0.
                  Style =
@@ -175,8 +175,8 @@ module PriceChart =
               : RectElement)
               |> Element.Rect
 
-              ({ X1 = parameters.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
-                 X2 = parameters.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
+              ({ X1 = settings.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
+                 X2 = settings.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
                  Y1 =
                    parameters.MinimumY
                    + ((100. - normalizeValue v.HighValue) / 100.)
