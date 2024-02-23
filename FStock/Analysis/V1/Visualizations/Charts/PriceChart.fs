@@ -31,7 +31,7 @@ module PriceChart =
         { ChartSettings: ChartSettings
           Data: StockData }
 
-    let createLabels (parameters: Parameters) (minValue: decimal) (maxValue: decimal) =
+    let createLabels (settings: ChartSettings) (minValue: decimal) (maxValue: decimal) =
 
         let diff = maxValue - minValue
 
@@ -39,7 +39,7 @@ module PriceChart =
         |> List.collect (fun i ->
             [ Text
                   { X = 1.
-                    Y = normalizeYValue (i * 20m) 0m 100m parameters.MinimumY parameters.MaximumY true
+                    Y = normalizeYValue (i * 20m) 0m 100m settings.MinimumY settings.MaximumY true
                     Value = [ TextType.Literal((minValue + ((diff / 5m) * i)).ToString("#.##")) ]
                     Style =
                       { Style.Default() with
@@ -52,8 +52,8 @@ module PriceChart =
                               |> Map.ofList } }
 
               Text
-                  { X = (parameters.MaximumX + 2.)
-                    Y = normalizeYValue (i * 20m) 0m 100m parameters.MinimumY parameters.MaximumY true
+                  { X = (settings.MaximumX + 2.)
+                    Y = normalizeYValue (i * 20m) 0m 100m settings.MinimumY settings.MaximumY true
                     Value = [ TextType.Literal((minValue + ((diff / 5m) * i)).ToString("#.##")) ]
                     Style =
                       { Style.Default() with
@@ -66,12 +66,12 @@ module PriceChart =
                               |> Map.ofList } }
 
               Line
-                  { X1 = parameters.MinimumX - 0.5
-                    X2 = parameters.MaximumX + 0.5
-                    Y1 = normalizeYValue (i * 20m) 0m 100m parameters.MinimumY parameters.MaximumY true
-                    Y2 = normalizeYValue (i * 20m) 0m 100m parameters.MinimumY parameters.MaximumY true
+                  { X1 = settings.MinimumX - 0.5
+                    X2 = settings.MaximumX + 0.5
+                    Y1 = normalizeYValue (i * 20m) 0m 100m settings.MinimumY settings.MaximumY true
+                    Y2 = normalizeYValue (i * 20m) 0m 100m settings.MinimumY settings.MaximumY true
                     Style =
-                      { parameters.AxisStyle with
+                      { settings.AxisStyle with
                           Opacity = Some 0.5 } }
 
               ])
