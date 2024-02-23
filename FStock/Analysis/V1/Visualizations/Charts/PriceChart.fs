@@ -120,12 +120,12 @@ module PriceChart =
                       StrokeWidth = Some 0.1
                       Stroke = Some "orange" } } ]
 
-    let createCandleSticks (settings: ChartSettings) (minValue: decimal) (maxValue: decimal) =
+    let createCandleSticks (settings: ChartSettings) (itemCount: int) (minValue: decimal) (maxValue: decimal) =
 
         let sectionPadding = 0.5
 
         let sectionWidth =
-            (parameters.MaximumX - parameters.MinimumX)
+            (settings.MaximumX - settings.MinimumX)
             / float parameters.Data.BaseData.Length
 
         let barWidth = sectionWidth - (sectionPadding * 2.)
