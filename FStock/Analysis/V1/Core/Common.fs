@@ -1,5 +1,6 @@
 ﻿namespace FStock.Analysis.V1.Core
 
+open FStock.Data.Domain
 open Microsoft.FSharp.Core
 
 [<AutoOpen>]
@@ -26,6 +27,15 @@ module Common =
           Close: decimal
           AdjustedClose: decimal
           Volume: decimal }
+        
+        member ipe.GetOHLCValue(ohlc: OHLCValue) =
+            match ohlc with
+            | OHLCValue.Open -> ipe.Open
+            | OHLCValue.High -> ipe.High
+            | OHLCValue.Low -> ipe.Low
+            | OHLCValue.Close -> ipe.Close
+            | OHLCValue.AdjustedClose -> ipe.AdjustedClose
+            | OHLCValue.Volume -> ipe.Volume
 
     and InstrumentType = | Stock
 
