@@ -178,13 +178,13 @@ module PriceChart =
               ({ X1 = settings.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
                  X2 = settings.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
                  Y1 =
-                   parameters.MinimumY
+                   settings.MinimumY
                    + ((100. - normalizeValue v.HighValue) / 100.)
-                     * (parameters.MaximumY - parameters.MinimumY)
+                     * (settings.MaximumY - settings.MinimumY)
                  Y2 =
-                   parameters.MinimumY
+                   settings.MinimumY
                    + ((100. - normalizeValue v.LowValue) / 100.)
-                     * (parameters.MaximumY - parameters.MinimumY)
+                     * (settings.MaximumY - settings.MinimumY)
                  Style =
                    { Fill = None
                      Stroke = color.GetValue() |> Some
@@ -274,10 +274,10 @@ module PriceChart =
           *)
 
           Line
-              { X1 = parameters.MinimumX
-                X2 = parameters.MinimumX
-                Y1 = parameters.MinimumY
-                Y2 = parameters.MaximumY
+              { X1 = settings.MinimumX
+                X2 = settings.MinimumX
+                Y1 = settings.MinimumY
+                Y2 = settings.MaximumY
                 Style = parameters.AxisStyle }
           Line
               { X1 = parameters.MaximumX
