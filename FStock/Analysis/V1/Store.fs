@@ -58,7 +58,7 @@ module Store =
           Records.Stock.CreateTableSql()
           Records.MetadataItem.CreateTableSql()
           Records.StockEntry.CreateTableSql()
-          Records.TableListingTime.CreateTableSql() ]
+          Records.TableListingItem.CreateTableSql() ]
         |> List.iter (ctx.ExecuteSqlNonQuery >> ignore)
 
     let createTable (ctx: SqliteContext) (technicalIndicator: TechnicalIndicator) =
