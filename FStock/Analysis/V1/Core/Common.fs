@@ -18,6 +18,19 @@ module Common =
           Symbol: string
           Type: InstrumentType
           Entries: InstrumentPositionEntry list }
+        
+        member i.GetMaxValue() =
+            i.Entries
+            |> List.maxBy (fun e -> e.High)
+            |> fun e -> e.High
+            
+        member i.GetMinValue() =
+            i.Entries
+            |> List.minBy (fun e -> e.Low)
+            |> fun e -> e.Low
+            
+        member i.ItemCount = i.Entries.Length 
+            
 
     and InstrumentPositionEntry =
         { Date: DateTime
