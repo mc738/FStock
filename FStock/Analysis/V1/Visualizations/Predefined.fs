@@ -99,18 +99,19 @@ module Predefined =
                 Fill = Some "green" }
 
 
-        ({ MinimumX = settings.LeftPadding
-           MaximumX = settings.LeftPadding + settings.Width
-           MinimumY = settings.TopPadding
-           MaximumY = settings.PriceChartHeight + settings.TopPadding
-           LeftYAxis = true
-           RightYAxis = true
-           XAxisStartOverride = Some(settings.LeftPadding / 2.)
-           XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
-           AxisStyle = axisStyle
+        ({ ChartSettings =
+            { MinimumX = settings.LeftPadding
+              MaximumX = settings.LeftPadding + settings.Width
+              MinimumY = settings.TopPadding
+              MaximumY = settings.PriceChartHeight + settings.TopPadding
+              LeftYAxis = true
+              RightYAxis = true
+              XAxisStartOverride = Some(settings.LeftPadding / 2.)
+              XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
+              AxisStyle = axisStyle }
            Data = stockData }
-        : PriceChart.Parameters)
-        |> PriceChart.create
+        : PriceChart.StockDataParameters)
+        |> PriceChart.createFromStockData
 
     let generateVolumeChart (settings: Settings) (stockData: StockData) =
         let topOffset = settings.TopPadding + settings.PriceChartHeight
