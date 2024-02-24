@@ -27,7 +27,7 @@ module PriceChart =
           XAxisEndOverride: float option
           AxisStyle: Style }
 
-    type Parameters =
+    type StockDataParameters =
         { ChartSettings: ChartSettings
           Data: StockData }
 
@@ -81,18 +81,16 @@ module PriceChart =
         (minValue: decimal)
         (maxValue: decimal)
         (itemCount: int)
-        (ma50: SimpleMovingAverage.SmaItem list)
-        (ma200: SimpleMovingAverage.SmaItem list)
+        (shortMovingAveragesData: SimpleMovingAverage.SmaItem list)
+        (longMovingAveragesData: SimpleMovingAverage.SmaItem list)
         =
 
-        let sectionWidth =
-            (settings.MaximumX - settings.MinimumX)
-            / float itemCount
+        let sectionWidth = (settings.MaximumX - settings.MinimumX) / float itemCount
 
 
         [ Path
               { Commands =
-                  ma50
+                  shortMovingAveragesData
                   |> List.mapi (fun i d ->
                       ({ X = settings.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
                          Y = normalizeYValue d.Sma minValue maxValue settings.MinimumY settings.MaximumY true }
@@ -107,7 +105,7 @@ module PriceChart =
 
           Path
               { Commands =
-                  ma200
+                  longMovingAveragesData
                   |> List.mapi (fun i d ->
                       ({ X = settings.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
                          Y = normalizeYValue d.Sma minValue maxValue settings.MinimumY settings.MaximumY true }
@@ -120,17 +118,21 @@ module PriceChart =
                       StrokeWidth = Some 0.1
                       Stroke = Some "orange" } } ]
 
-    let createCandleSticks (settings: ChartSettings) (itemCount: int) (minValue: decimal) (maxValue: decimal) =
+    let createCandleSticks
+        (settings: ChartSettings)
+        (itemCount: int)
+        (minValue: decimal)
+        (maxValue: decimal)
+        (baseData: InstrumentPositionEntry list)
+        =
 
         let sectionPadding = 0.5
 
-        let sectionWidth =
-            (settings.MaximumX - settings.MinimumX)
-            / float itemCount
+        let sectionWidth = (settings.MaximumX - settings.MinimumX) / float itemCount
 
         let barWidth = sectionWidth - (sectionPadding * 2.)
 
-        parameters.Data.BaseData
+        baseData
         |> List.mapi (fun i v ->
             let normalizeValue (value: decimal) =
                 ({ MaxValue = maxValue
@@ -141,17 +143,11 @@ module PriceChart =
 
             let top, bottom, color =
                 // ValueA is CloseValue because this is comparing if the value went up or down over the period.
-                match
-                    { ValueA = v.CloseValue
-                      ValueB = v.OpenValue }
-                    |> decimalValueComparer
-                with
+                match { ValueA = v.Close; ValueB = v.Open } |> decimalValueComparer with
                 | ValueComparisonResult.GreaterThan ->
-                    normalizeValue v.CloseValue, normalizeValue v.OpenValue, SvgColor.Named "green" // series.Style.PositiveColor
-                | ValueComparisonResult.LessThan ->
-                    normalizeValue v.OpenValue, normalizeValue v.CloseValue, SvgColor.Named "red"
-                | ValueComparisonResult.Equal ->
-                    normalizeValue v.CloseValue, normalizeValue v.OpenValue, SvgColor.Named "green"
+                    normalizeValue v.Close, normalizeValue v.Open, SvgColor.Named "green" // series.Style.PositiveColor
+                | ValueComparisonResult.LessThan -> normalizeValue v.Open, normalizeValue v.Close, SvgColor.Named "red"
+                | ValueComparisonResult.Equal -> normalizeValue v.Close, normalizeValue v.Open, SvgColor.Named "green"
 
             let height = ((settings.MaximumY - settings.MinimumY) / 100.) * (top - bottom)
 
@@ -179,12 +175,11 @@ module PriceChart =
                  X2 = settings.MinimumX + (float i * sectionWidth) + (sectionWidth / 2.)
                  Y1 =
                    settings.MinimumY
-                   + ((100. - normalizeValue v.HighValue) / 100.)
+                   + ((100. - normalizeValue v.High) / 100.)
                      * (settings.MaximumY - settings.MinimumY)
                  Y2 =
                    settings.MinimumY
-                   + ((100. - normalizeValue v.LowValue) / 100.)
-                     * (settings.MaximumY - settings.MinimumY)
+                   + ((100. - normalizeValue v.Low) / 100.) * (settings.MaximumY - settings.MinimumY)
                  Style =
                    { Fill = None
                      Stroke = color.GetValue() |> Some
@@ -197,43 +192,50 @@ module PriceChart =
               |> Element.Line ])
         |> List.concat
 
-    let createCurrentLine (parameters: Parameters) (minValue: decimal) (maxValue: decimal) =
+    let createCurrentLine
+        (settings: ChartSettings)
+        (minValue: decimal)
+        (maxValue: decimal)
+        (baseData: InstrumentPositionEntry list)
+        =
 
-        let item = parameters.Data.BaseData |> List.last
+        let item = baseData |> List.last
 
         let y =
-            normalizeYValue (item.CloseValue) minValue maxValue parameters.MinimumY parameters.MaximumY true
+            normalizeYValue (item.Close) minValue maxValue settings.MinimumY settings.MaximumY true
 
         [ Line
-              { X1 = parameters.MinimumX
-                X2 = parameters.MaximumX
+              { X1 = settings.MinimumX
+                X2 = settings.MaximumX
                 Y1 = y
                 Y2 = y
                 Style =
-                  { parameters.AxisStyle with
+                  { settings.AxisStyle with
                       StrokeDashArray = Some [ 1; 1 ]
                       GenericValues = [ "stroke-dashoffset", "1" ] |> Map.ofList } } ]
 
-    let createFromStockData (parameters: Parameters) =
+    let create
+        (settings: ChartSettings)
+        (data: Instrument)
+        (shortMoveAverageItems: SimpleMovingAverage.SmaItem list)
+        (longMoveAverageItems: SimpleMovingAverage.SmaItem list)
+        =
 
-        let baseMaxValue =
-            parameters.Data.BaseData
-            |> List.maxBy (fun e -> e.HighValue)
-            |> fun e -> e.HighValue
+        let baseMaxValue = data.GetMaxValue()
 
-        let baseMinValue =
-            parameters.Data.BaseData
-            |> List.minBy (fun e -> e.LowValue)
-            |> fun e -> e.LowValue
+        let baseMinValue = data.GetMinValue()
 
+        (*
         let maItems =
             parameters.Data.All()
             |> List.map (fun d ->
                 { Symbol = ""
                   Date = d.EntryDate
                   Price = d.CloseValue }
-                : BasicInputItem)
 
+                : BasicInputItem)
+        *)
+        (*
         let ma50 =
             SimpleMovingAverage.generate { WindowSize = 50 } maItems
             |> List.take parameters.Data.BaseData.Length
@@ -244,56 +246,83 @@ module PriceChart =
             SimpleMovingAverage.generate { WindowSize = 200 } maItems
             |> List.take parameters.Data.BaseData.Length
             |> List.rev
-
-
+        *)
 
         let (minValue, maxValue) =
             createMinMaxValues
                 (List.min
                     [ baseMinValue
-                      ma50 |> List.minBy (fun v -> v.Sma) |> (fun r -> r.Sma)
-                      ma200 |> List.minBy (fun v -> v.Sma) |> (fun r -> r.Sma) ])
+                      shortMoveAverageItems |> List.minBy (fun v -> v.Sma) |> (fun r -> r.Sma)
+                      longMoveAverageItems |> List.minBy (fun v -> v.Sma) |> (fun r -> r.Sma) ])
                 (List.max
                     [ baseMaxValue
-                      ma50 |> List.maxBy (fun v -> v.Sma) |> (fun r -> r.Sma)
-                      ma200 |> List.maxBy (fun v -> v.Sma) |> (fun r -> r.Sma) ])
+                      shortMoveAverageItems |> List.maxBy (fun v -> v.Sma) |> (fun r -> r.Sma)
+                      longMoveAverageItems |> List.maxBy (fun v -> v.Sma) |> (fun r -> r.Sma) ])
 
         [ // First create the axis
-          (*
-          Text
-              { X = 1.
-                Y = parameters.MinimumY + 5.
-                Value = [ TextType.Literal "Price" ]
-                Style =
-                  { Style.Default() with
-                      Opacity = Some 1.
-                      Fill = Some "black"
-                      GenericValues =
-                          [ "font-size", "4px" (*"text-anchor", "middle"; "font-family", "\"roboto\""*) ]
-                          |> Map.ofList } }
-          *)
-
           Line
               { X1 = settings.MinimumX
                 X2 = settings.MinimumX
                 Y1 = settings.MinimumY
                 Y2 = settings.MaximumY
-                Style = parameters.AxisStyle }
+                Style = settings.AxisStyle }
           Line
-              { X1 = parameters.MaximumX
-                X2 = parameters.MaximumX
-                Y1 = parameters.MinimumY
-                Y2 = parameters.MaximumY
-                Style = parameters.AxisStyle }
+              { X1 = settings.MaximumX
+                X2 = settings.MaximumX
+                Y1 = settings.MinimumY
+                Y2 = settings.MaximumY
+                Style = settings.AxisStyle }
           Line
-              { X1 = parameters.XAxisStartOverride |> Option.defaultValue parameters.MinimumX
-                X2 = parameters.XAxisEndOverride |> Option.defaultValue parameters.MaximumX
-                Y1 = parameters.MaximumY
-                Y2 = parameters.MaximumY
-                Style = parameters.AxisStyle }
+              { X1 = settings.XAxisStartOverride |> Option.defaultValue settings.MinimumX
+                X2 = settings.XAxisEndOverride |> Option.defaultValue settings.MaximumX
+                Y1 = settings.MaximumY
+                Y2 = settings.MaximumY
+                Style = settings.AxisStyle }
 
-          yield! createLabels parameters minValue maxValue
+          yield! createLabels settings minValue maxValue
 
-          yield! createCurrentLine parameters minValue maxValue
-          yield! createMovingAverageLines parameters minValue maxValue ma50 ma200
-          yield! createCandleSticks parameters minValue maxValue ]
+          yield! createCurrentLine settings minValue maxValue data.Entries
+          yield!
+              createMovingAverageLines
+                  settings
+                  minValue
+                  maxValue
+                  data.ItemCount
+                  shortMoveAverageItems
+                  longMoveAverageItems
+          yield! createCandleSticks settings data.ItemCount minValue maxValue data.Entries ]
+
+    let createFromStockData (parameters: StockDataParameters) =
+        let baseData = parameters.Data.BaseInstrumentEntries()
+
+        let auxData = parameters.Data.AuxInstrumentEntries()
+
+        let instrument =
+            ({ Name = None
+               Symbol = ""
+               Type = InstrumentType.Stock
+               Entries = baseData }
+            : Instrument)
+
+        let maItems =
+            parameters.Data.All()
+            |> List.map (fun d ->
+                { Symbol = ""
+                  Date = d.EntryDate
+                  Price = d.CloseValue }
+                : BasicInputItem)
+
+        // TODO make window size configurable
+        let ma50 =
+            SimpleMovingAverage.generate { WindowSize = 50 } maItems
+            |> List.take parameters.Data.BaseData.Length
+            |> List.rev
+
+
+        // TODO make window size configurable
+        let ma200 =
+            SimpleMovingAverage.generate { WindowSize = 200 } maItems
+            |> List.take parameters.Data.BaseData.Length
+            |> List.rev
+
+        create parameters.ChartSettings instrument ma50 ma200
