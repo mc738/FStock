@@ -29,20 +29,18 @@ module ChartGenerator =
           BottomPadding: float }
 
     and GeneratorSettings =
-        {
-            Setting: GeneralSettings
-        }
-    
-    type GeneratorState =
-        {
-            CurrentY: float
-            Elements: Element list
-        }
+        { Setting: GeneralSettings
+          Parts: ChartType list }
 
-    
-    let run () =
-        ()
-    
-    
-    
+    type GeneratorState =
+        { CurrentY: float
+          Elements: Element list }
+
+
+    let generate () = ()
+
+    let run () = ()
+
+
+
     ()
