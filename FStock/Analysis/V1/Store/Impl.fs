@@ -1,4 +1,4 @@
-﻿namespace FStock.Analysis.V1
+﻿namespace FStock.Analysis.V1.Store
 
 open System
 open System.Diagnostics
@@ -9,7 +9,8 @@ open FStock.Data.Store
 open Freql.Sqlite
 open Microsoft.FSharp.Core
 
-module Store =
+[<AutoOpen>]
+module Impl =
 
     type BuildSettings =
         { Sampling: SamplingType

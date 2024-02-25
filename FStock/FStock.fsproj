@@ -27,11 +27,10 @@
         <Compile Include="Analysis\V1\Visualizations\Charts\MacdChart.fs" />
         <Compile Include="Analysis\V1\Visualizations\Charts\RsiChart.fs" />
         <Compile Include="Analysis\V1\Visualizations\Predefined.fs" />
+        <Compile Include="Analysis\V1\Store\Impl.fs" />
         <Compile Include="Analysis\V1\Tools\GrowthTester.fs" />
         <Compile Include="Analysis\V1\Tools\StockGrowthTester.fs" />
         <Compile Include="Analysis\V1\Tools\ChartGenerator.fs" />
-        <Compile Include="Analysis\V1\Store.fs" />
-        
         <Compile Include="Modeling\V1\Common.fs" />
         <Compile Include="Modeling\V1\Data.fs" />
         <Compile Include="Modeling\V1\Conditions.fs" />
