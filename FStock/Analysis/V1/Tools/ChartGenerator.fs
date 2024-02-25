@@ -16,6 +16,11 @@ module ChartGenerator =
         }
      
     
+    and GeneralSettings =
+        {
+            Width: float
+            
+        }
     
     
     ()
