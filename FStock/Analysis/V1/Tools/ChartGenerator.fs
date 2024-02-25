@@ -1,5 +1,6 @@
 ﻿namespace FStock.Analysis.V1.Tools
 
+open FSVG
 open FStock.Analysis.V1.Visualizations.Charts
 open Microsoft.FSharp.Core
 
@@ -27,5 +28,21 @@ module ChartGenerator =
           TopPadding: float
           BottomPadding: float }
 
+    and GeneratorSettings =
+        {
+            Setting: GeneralSettings
+        }
+    
+    type GeneratorState =
+        {
+            CurrentY: float
+            Elements: Element list
+        }
 
+    
+    let run () =
+        ()
+    
+    
+    
     ()
