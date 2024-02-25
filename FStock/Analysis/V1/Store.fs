@@ -11,7 +11,6 @@ open Microsoft.FSharp.Core
 
 module Store =
 
-
     type BuildSettings =
         { Sampling: SamplingType
           BuildMode: BuildMode
@@ -40,7 +39,6 @@ module Store =
             | Rsi(tableName, parameters) -> "rsi"
             | Macd(tableName, parameters) -> "macd"
 
-
         member ti.GetLookBack() =
             match ti with
             | Sma(tableName, parameters) -> parameters.WindowSize
@@ -51,7 +49,6 @@ module Store =
                   parameters.ShortTermPeriods
                   parameters.LongTermPeriods ]
                 |> List.max
-
 
     let initialize (ctx: SqliteContext) =
         [ Records.Artifact.CreateTableSql()
