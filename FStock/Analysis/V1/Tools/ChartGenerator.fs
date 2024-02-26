@@ -82,8 +82,23 @@ module ChartGenerator =
         storeCtx.SelectAnon<RelativeStrengthIndex.RsiItem>(sql, parameters)
         |> List.sortBy (fun rsi -> rsi.EntryDate)
 
+    let fetchMacdData
+        (storeCtx: SqliteContext)
+        (tableName: string)
+        (symbol: string)
+        (endDate: DateTime)
+        (entryCount: int)
+        =
 
-    
+        let sql, parameters =
+            $"""SELECT * FROM {tableName} WHERE symbol = @0 AND DATE(entry_date) <= DATE(@1) ORDER BY DATE(entry_date) DESC LIMIT @2""",
+            [ box symbol; box endDate; box entryCount ]
+
+        storeCtx.SelectAnon<MovingAverageConvergenceDivergence.MacdItem>(sql, parameters)
+        |> List.sortBy (fun ma -> ma.EntryDate)
+
+
+
 
     let generate (settings: GeneratorSettings) =
         let initState = GeneratorState.Create(yStart = settings.Settings.TopPadding)
