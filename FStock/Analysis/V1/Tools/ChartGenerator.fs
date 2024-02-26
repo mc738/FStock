@@ -112,38 +112,49 @@ module ChartGenerator =
         storeCtx.SelectAnon<MovingAverageConvergenceDivergence.MacdItem>(sql, parameters)
         |> List.sortBy (fun ma -> ma.EntryDate)
 
+    let axisStyle =
+        { Fill = None
+          Stroke = Some "black"
+          StrokeWidth = Some 0.1
+          StrokeLineCap = None
+          StrokeDashArray = None
+          Opacity = Some 1.
+          GenericValues = Map.empty }
 
     let generatePriceChart (settings: GeneratorSettings) (chartSettings: PriceChartSettings) (state: GeneratorState) =
-        
-        let cs = ({
-            MinimumX = 0.
-            MaximumX = failwith "todo"
-            MinimumY = failwith "todo"
-            MaximumY = failwith "todo"
-            LeftYAxis = true
-            RightYAxis = true
-            XAxisStartOverride = failwith "todo"
-            XAxisEndOverride = failwith "todo"
-            AxisStyle = failwith "todo" 
-        }: MacdChart.ChartSettings)
-        
-        MacdChart.create
-        
-        
+
+        let cs =
+            ({ MinimumX = 0.
+               MaximumX = failwith "todo"
+               MinimumY = failwith "todo"
+               MaximumY = failwith "todo"
+               LeftYAxis = true
+               RightYAxis = true
+               XAxisStartOverride = failwith "todo"
+               XAxisEndOverride = failwith "todo"
+               AxisStyle = axisStyle }
+            : PriceChart.ChartSettings)
+
+        PriceChart.create cs
+
+
         ()
 
 
     let generate (settings: GeneratorSettings) =
         let initState = GeneratorState.Create(yStart = settings.Settings.TopPadding)
 
-        settings.Parts |> List.fold (fun state ct ->
-            match ct with
-            | ChartType.Price priceChartSettings -> failwith "todo"
-            | ChartType.Volume volumeChartSettings -> failwith "todo"
-            | ChartType.Macd macdChartSettings -> failwith "todo"
-            | ChartType.Rsi rsiChartSettings -> failwith "todo"
-            
-            state) initState
+        settings.Parts
+        |> List.fold
+            (fun state ct ->
+                match ct with
+                | ChartType.Price priceChartSettings -> failwith "todo"
+                | ChartType.Volume volumeChartSettings -> failwith "todo"
+                | ChartType.Macd macdChartSettings -> failwith "todo"
+                | ChartType.Rsi rsiChartSettings -> failwith "todo"
+
+                state)
+            initState
 
 
 
