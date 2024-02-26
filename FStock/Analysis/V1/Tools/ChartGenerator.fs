@@ -63,7 +63,7 @@ module ChartGenerator =
         =
 
         let sql, parameters =
-            $"""SELECT * FROM {tableName} WHERE symbol = @0 AND DATE(entry_date) <= DATE(@1) ORDER BY DATE(entry_date) DESC LIMIT @2""",
+            $"""WHERE symbol = @0 AND DATE(entry_date) <= DATE(@1) ORDER BY DATE(entry_date) DESC LIMIT @2""",
             [ box symbol; box endDate; box entryCount ]
 
         Operations.selectStockEntryRecords storeCtx [ sql ] parameters
@@ -123,6 +123,8 @@ module ChartGenerator =
 
     let generatePriceChart (storeCtx: SqliteContext) (settings: GeneralSettings) (chartSettings: PriceChartSettings) (state: GeneratorState) =
 
+        match Operations.selectStockRecord storeCtx [ "WHERE " ]
+        
         let cs =
             ({ MinimumX = settings.LeftPadding                           
                MaximumX = settings.LeftPadding + settings.Width          
