@@ -121,20 +121,23 @@ module ChartGenerator =
           Opacity = Some 1.
           GenericValues = Map.empty }
 
-    let generatePriceChart (settings: GeneratorSettings) (chartSettings: PriceChartSettings) (state: GeneratorState) =
+    let generatePriceChart (storeCtx: SqliteContext) (settings: GeneralSettings) (chartSettings: PriceChartSettings) (state: GeneratorState) =
 
         let cs =
-            ({ MinimumX = 0.
-               MaximumX = failwith "todo"
-               MinimumY = failwith "todo"
-               MaximumY = failwith "todo"
+            ({ MinimumX = settings.LeftPadding                           
+               MaximumX = settings.LeftPadding + settings.Width          
+               MinimumY = state.CurrentY                            
+               MaximumY = state.CurrentY + chartSettings.Height 
                LeftYAxis = true
                RightYAxis = true
-               XAxisStartOverride = failwith "todo"
-               XAxisEndOverride = failwith "todo"
+               XAxisStartOverride = Some(settings.LeftPadding / 2.)
+               XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
                AxisStyle = axisStyle }
             : PriceChart.ChartSettings)
 
+        match Operations.selectStockRecord stor
+        
+        
         PriceChart.create cs
 
 
@@ -155,11 +158,6 @@ module ChartGenerator =
 
                 state)
             initState
-
-
-
-
-        ()
 
     let run () = ()
 
