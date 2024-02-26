@@ -113,13 +113,35 @@ module ChartGenerator =
         |> List.sortBy (fun ma -> ma.EntryDate)
 
 
+    let generatePriceChart (settings: GeneratorSettings) (chartSettings: PriceChartSettings) (state: GeneratorState) =
+        
+        let cs = ({
+            MinimumX = 0.
+            MaximumX = failwith "todo"
+            MinimumY = failwith "todo"
+            MaximumY = failwith "todo"
+            LeftYAxis = true
+            RightYAxis = true
+            XAxisStartOverride = failwith "todo"
+            XAxisEndOverride = failwith "todo"
+            AxisStyle = failwith "todo" 
+        }: MacdChart.ChartSettings)
+        
+        MacdChart.create
+        
+        
+        ()
 
 
     let generate (settings: GeneratorSettings) =
         let initState = GeneratorState.Create(yStart = settings.Settings.TopPadding)
 
         settings.Parts |> List.fold (fun state ct ->
-            
+            match ct with
+            | ChartType.Price priceChartSettings -> failwith "todo"
+            | ChartType.Volume volumeChartSettings -> failwith "todo"
+            | ChartType.Macd macdChartSettings -> failwith "todo"
+            | ChartType.Rsi rsiChartSettings -> failwith "todo"
             
             state) initState
 
