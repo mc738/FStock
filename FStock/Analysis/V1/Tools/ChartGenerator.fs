@@ -2,6 +2,7 @@
 
 open System
 open FSVG
+open FStock.Analysis.V1.Core.Persistence
 open FStock.Analysis.V1.TechnicalIndicators
 open FStock.Analysis.V1.Visualizations.Charts
 
@@ -53,6 +54,20 @@ module ChartGenerator =
                 CurrentY = currentY
                 Elements = gs.Elements @ elements }
 
+    let fetchStockData
+        (storeCtx: SqliteContext)
+        (tableName: string)
+        (symbol: string)
+        (endDate: DateTime)
+        (entryCount: int)
+        =
+
+        let sql, parameters =
+            $"""SELECT * FROM {tableName} WHERE symbol = @0 AND DATE(entry_date) <= DATE(@1) ORDER BY DATE(entry_date) DESC LIMIT @2""",
+            [ box symbol; box endDate; box entryCount ]
+
+        Operations.selectStockEntryRecords storeCtx [ sql ] parameters
+
     let fetchSimpleMovingAverageData
         (storeCtx: SqliteContext)
         (tableName: string)
@@ -103,7 +118,10 @@ module ChartGenerator =
     let generate (settings: GeneratorSettings) =
         let initState = GeneratorState.Create(yStart = settings.Settings.TopPadding)
 
-        settings.Parts |> List.fold (fun state ct -> state) initState
+        settings.Parts |> List.fold (fun state ct ->
+            
+            
+            state) initState
 
 
 
