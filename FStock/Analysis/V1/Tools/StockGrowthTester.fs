@@ -46,7 +46,6 @@ module StockGrowthTester =
 
         $"{tableNamePrefix}_{parameters.StartDate:ddMMyy}_{takeProfitPart}_{stopLossPart}_mp_{parameters.MaxPeriods}_b_{ohlcPart parameters.BuyOHLCValue}_s_{ohlcPart parameters.SellOHLCValue}"
 
-
     [<CLIMutable>]
     type StockGrowthTestItem =
         { Symbol: string
