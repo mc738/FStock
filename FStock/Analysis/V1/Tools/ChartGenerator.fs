@@ -2,6 +2,7 @@
 
 open System
 open FSVG
+open FStock.Analysis.V1.Core
 open FStock.Analysis.V1.Core.Persistence
 open FStock.Analysis.V1.TechnicalIndicators
 open FStock.Analysis.V1.Visualizations.Charts
@@ -121,23 +122,37 @@ module ChartGenerator =
           Opacity = Some 1.
           GenericValues = Map.empty }
 
-    let generatePriceChart (storeCtx: SqliteContext) (settings: GeneralSettings) (chartSettings: PriceChartSettings) (symbol: string) (state: GeneratorState) =
+    let generatePriceChart
+        (storeCtx: SqliteContext)
+        (settings: GeneralSettings)
+        (chartSettings: PriceChartSettings)
+        (symbol: string)
+        (endDate: DateTime)
+        (state: GeneratorState)
+        =
 
         match Operations.selectStockRecord storeCtx [ "WHERE symbol = @0" ] [ symbol ] with
         | None -> state
-        | Some value ->
-                
+        | Some stock ->
+
             let cs =
-                ({ MinimumX = settings.LeftPadding                           
-                   MaximumX = settings.LeftPadding + settings.Width          
-                   MinimumY = state.CurrentY                            
-                   MaximumY = state.CurrentY + chartSettings.Height 
+                ({ MinimumX = settings.LeftPadding
+                   MaximumX = settings.LeftPadding + settings.Width
+                   MinimumY = state.CurrentY
+                   MaximumY = state.CurrentY + chartSettings.Height
                    LeftYAxis = true
                    RightYAxis = true
                    XAxisStartOverride = Some(settings.LeftPadding / 2.)
                    XAxisEndOverride = Some(settings.LeftPadding + settings.Width + (settings.RightPadding / 2.))
                    AxisStyle = axisStyle }
                 : PriceChart.ChartSettings)
+
+            let instrument =
+                ({ Name = Some stock.Name
+                   Symbol = stock.Symbol
+                   Type = InstrumentType.Stock
+                   Entries = fetchStockData storeCtx "" stock.Symbol }
+                : Instrument)
 
             PriceChart.create cs
 
